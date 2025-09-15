@@ -11,7 +11,7 @@ huffmand de maes con compresores y otros
 - [] Implementar una vesión paralela con fork()
 - [] Implementar una versión concurrente usando pthread()
 - Tomar el tiempo de la corrida en milisegundos
-## Informe de latx
+## Informe de latex
 - [] Explicación de la función fork()
 - [] Explicación de pthread
 - [] Explicación de las estrategias para paralelizar
