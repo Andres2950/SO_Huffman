@@ -17,7 +17,6 @@ int main(int argc, char* argv[]){
   hola_mundo("printf");
   ft = new_frequency_table();
   frequency_table_add_text(ft, "COMO COME COCORITO COME COMO COSMONAUTA");
-  //frequency_table_add_text(ft, "Vamos aprender a programa");
   frequency_table_print(ft);
   init_linked_list(&list);
   linked_list_insert_bulk(&list, ft);
