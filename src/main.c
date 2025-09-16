@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "headers/huffman.h"
+#include "headers/filehandler.h"
 #include <locale.h>
 
 int *ft;
