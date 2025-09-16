@@ -38,5 +38,10 @@ int main(int argc, char* argv[]){
     printf("---------------------------------- DICCIONARIO --------------------------\n");
     huffman_dictionary_print(dictionary);
 
+    //Ejemplo escribir binario
+    FILE* f = fopen("binario.b", "w");
+    write_binary_to_file(f, "0100011101001001010101000010000001000111010101010100010");
+    fclose(f);
+
     return 0;
 }
