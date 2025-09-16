@@ -4,11 +4,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define NUM_SYMBOLS 256
+#include <wchar.h>
+#include <locale.h>
+//#define NUM_SYMBOLS 256 
+#define MAX_UNICODE 0x110000 // El unicode maximo es 10FFFF, etonces necesitmaos un arreglo de 10FFFF+1
 
 
 typedef struct Node{
-  char ch;
+  wchar_t ch; //wchar para UTF-8
   int freq;
   struct Node *left, *right, *next;
 } Node;
@@ -18,9 +21,9 @@ typedef struct {
   int size;
 } LinkedList;
 
-
+////////////////////////////////// -------------------------------
 int* new_frequency_table();
-void frequency_table_add_text(int *ft, char *text);
+void frequency_table_add_text(int *ft, wchar_t *text);
 void frequency_table_print(int *ft);
 void init_linked_list(LinkedList *list);
 void linked_list_insert(LinkedList *list, Node *node);
@@ -28,8 +31,9 @@ void linked_list_insert_bulk(LinkedList *list, int *ft);
 void linked_list_print(LinkedList *list);
 Node* create_huffman_binary_tree(LinkedList *list);
 char** huffman_create_dictionary(Node *tree);
+void huffman_dictionary_print(char **dict);
 void huffman_binary_tree_print(Node *root, int depth);
-
+// ----------------------------------------------------
 #ifndef HUFFMAN_C
 
 void init_linked_list(LinkedList *list){
@@ -59,7 +63,7 @@ void linked_list_insert(LinkedList *list, Node *node){
 
 void linked_list_insert_bulk(LinkedList *list, int *ft){
   Node *new_node;
-  for (int i = 0; i < NUM_SYMBOLS; ++i){
+  for (int i = 0; i < MAX_UNICODE; ++i){
     if(ft[i] > 0){
       new_node = malloc(sizeof(Node));
       new_node->ch = i;
@@ -76,7 +80,7 @@ void linked_list_insert_bulk(LinkedList *list, int *ft){
 void linked_list_print(LinkedList *list){
   Node *tmp = list->first;
   while(tmp){
-    printf("\tCharacter: %c Frequency: %d\n", tmp->ch, tmp->freq);
+    printf("\tCharacter: %lc Frequency: %d\n", tmp->ch, tmp->freq);
     tmp = tmp->next;
   }
 }
@@ -98,7 +102,7 @@ Node* create_huffman_binary_tree(LinkedList *list){
     first = linked_list_remove_first(list);
     second = linked_list_remove_first(list);
     new_node = malloc(sizeof(Node));
-    new_node->ch = '+';
+    new_node->ch = L'+';
     new_node->freq = first->freq + second->freq;
     new_node->next = 0;
     new_node->right = first;
@@ -110,23 +114,19 @@ Node* create_huffman_binary_tree(LinkedList *list){
 
 
 int huffman_binary_tree_get_depth(Node *root){
-  if (!root){
-    return -1;
-  }
+  if (!root) return -1;
+  
   int left, right;
 
   left = huffman_binary_tree_get_depth(root->left) + 1;
   right = huffman_binary_tree_get_depth(root->right) + 1;
   
-  if (left > right)
-    return left;
-  else
-    return right;
+  return (left > right) ? left : right;
 }
 
 void huffman_binary_tree_print(Node *root, int depth){
   if (root->left == 0 && root->right == 0){
-    printf("\tLetter: %c\tDepth: %d\n", root->ch, depth);
+    printf("\tLetter: %lc\tDepth: %d\n", root->ch, depth);
   } else {
     huffman_binary_tree_print(root->left, depth + 1);
     huffman_binary_tree_print(root->right, depth + 1);
@@ -155,9 +155,9 @@ void huffman_fill_dictionary(Node *root, char **dictionary, char *code, int dept
 
 
 char** huffman_create_dictionary(Node *tree){
-  char **dictionary = malloc(sizeof(char *) * NUM_SYMBOLS);
+  char **dictionary = malloc(sizeof(char *) * MAX_UNICODE);
   int depth = huffman_binary_tree_get_depth(tree) + 1;
-  for (int i = 0; i < NUM_SYMBOLS; ++i){
+  for (int i = 0; i < MAX_UNICODE; ++i){
     dictionary[i] = calloc(depth, sizeof(char));
   }
   huffman_fill_dictionary(tree, dictionary, "", depth);
@@ -170,25 +170,32 @@ char** huffman_create_dictionary(Node *tree){
 
 int* new_frequency_table(){
   int i;
-  int *ft = malloc(4 * NUM_SYMBOLS);
-  for (i = 0; i < NUM_SYMBOLS; ++i)
+  int *ft = malloc(sizeof(int) * MAX_UNICODE);
+  for (i = 0; i < MAX_UNICODE; ++i)
     ft[i] = 0;
   return ft;
 }
 
-void frequency_table_add_text(int *ft, char *text){
-  for(int i = 0; text[i] != '\0'; ++i){
+void frequency_table_add_text(int *ft, wchar_t *text){
+  for(int i = 0; text[i] != L'\0'; ++i){
     ft[text[i]]++;
   }
 }
 
 void frequency_table_print(int *ft){
-  for(int i = 0; i < NUM_SYMBOLS; ++i){
+  for(int i = 0; i < MAX_UNICODE; ++i){
     if (ft[i] > 0)
-      printf("\t%d = %d = %c\n", i, ft[i], i);
+      printf("\ti: %d = ft[i]: %d = char: %lc\n", i, ft[i], i);
   }
 }
 
+void huffman_dictionary_print(char **dict){
+    for (int i = 0; i < MAX_UNICODE; ++i){
+        if(dict[i] && dict[i][0] != '\0'){
+          printf("Unicode:'%lc', i:%d; Huffman Code:'%s'\n", i, i, dict[i]);
+      }
+    }
+}
 
 #endif
 #endif

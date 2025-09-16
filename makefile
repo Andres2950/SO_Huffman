@@ -16,7 +16,7 @@ RESET  := \033[0m
 
 .PHONY: all clean run
 
-all: $(BIN)
+all: $(BIN_MAIN)
 
 $(BIN_MAIN): $(SRC_MAIN) $(SRC_HEADERS)
 	@echo -e "$(YELLOW) --- COMPILING --- $(RESET)"
@@ -25,7 +25,7 @@ $(BIN_MAIN): $(SRC_MAIN) $(SRC_HEADERS)
 		&& echo -e "$(GREEN) $@ COMPILED SUCCESSFULLY$(RESET)" \
 		|| echo -e "$(GREEN) $@ HAD AN ERROR$(RESET)"
 
-run: $(BIN_MAIN)
+run: clean $(BIN_MAIN)
 	@echo -e "$(YELLOW) ###### RUNNING ###### $(RESET)"
 	@$(BIN_MAIN)
 
