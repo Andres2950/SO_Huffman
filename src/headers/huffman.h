@@ -197,5 +197,18 @@ void huffman_dictionary_print(char **dict){
     }
 }
 
+char* huffman_translate(wchar_t* text, int size, char** dictionary){
+  char* binary_code = calloc(2, 1);
+  int len = 0;
+  for(int i=0; i<size; i++){
+    char* code = dictionary[text[i]];
+    len += strlen(code);
+    binary_code = realloc(binary_code, len);
+    strcat(binary_code, code);
+  }
+
+  return binary_code;
+}
+
 #endif
 #endif

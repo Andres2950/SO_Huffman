@@ -35,9 +35,18 @@ int comprimir(char* src, char* dst){
     Node *huffman_tree = create_huffman_binary_tree(&list);
     char **dictionary = huffman_create_dictionary(huffman_tree);
     
-     huffman_binary_tree_print(huffman_tree, 0);
+    huffman_binary_tree_print(huffman_tree, 0);
+    huffman_dictionary_print(dictionary);
 
-    //TODO: traducir cada texto a binario
+    char* binary = huffman_translate(text, text_size, dictionary); //prueba con todo el texto
+    printf("%s", binary);
+    
+    FILE* f = fopen("./ej/comprimido.b", "w");    
+    write_binary_to_file(f, binary);
+    fclose(f);
+
+    // TODO: Traducir cada texto a binario
+    
     //TODO: escribir el archivo comprimido
     // arbol \n filename \t bytes del contenido \t contenido \n
 }
