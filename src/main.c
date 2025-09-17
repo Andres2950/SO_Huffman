@@ -13,7 +13,30 @@ void hola_mundo(char *c){
 int comprimir(char* src, char* dst){
     // Leer src todos los archivos en src (nombre y contenido)
     TargetDir* td = readTargetDir(src);  
-    //TODO: Hacer Huffman con el contenido de todos lo archivos    
+    // //Hacer Huffman con el contenido de todos lo archivos    
+    int text_size;
+    for(int i = 0; i<td->n_files; i++){
+        text_size += wcslen(td->content[i]);
+    }
+    
+    wchar_t* text = calloc(text_size, sizeof(wchar_t));
+    for(int i = 0; i<td->n_files; i++){
+        wcscat(text, td->content[i]);
+    }
+
+    //Huffman
+    
+    int* ft = new_frequency_table();
+    frequency_table_add_text(ft, text);            
+    LinkedList list;
+    init_linked_list(&list);
+    linked_list_insert_bulk(&list, ft);        
+
+    Node *huffman_tree = create_huffman_binary_tree(&list);
+    char **dictionary = huffman_create_dictionary(huffman_tree);
+    
+     huffman_binary_tree_print(huffman_tree, 0);
+
     //TODO: traducir cada texto a binario
     //TODO: escribir el archivo comprimido
     // arbol \n filename \t bytes del contenido \t contenido \n
@@ -49,15 +72,17 @@ int main(int argc, char* argv[]){
     huffman_dictionary_print(dictionary);
 
     //Ejemplo escribir binario
-    FILE* f = fopen("binario.b", "w");
-    write_binary_to_file(f, "0100011101001001010101000010000001000111010101010100010");
-    fclose(f);
+    // FILE* f = fopen("binario.b", "w");
+    // write_binary_to_file(f, "0100011101001001010101000010000001000111010101010100010");
+    // fclose(f);
 
     //ejemplo leer directorio
-    TargetDir* td = readTargetDir(".");
+    TargetDir* td = readTargetDir("./ej");
     for(int i = 0; i<td->n_files; i++){
-        printf("%s\n%s\n\n", td->filenames[i], td->content[i]);
+        printf("%s\n%ls\n\n", td->filenames[i], td->content[i]);
     }
+
+    comprimir("./ej", "");
 
     return 0;
 }

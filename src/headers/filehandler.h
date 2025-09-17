@@ -17,7 +17,7 @@ typedef struct{
     char* path;
     char** filenames;
     int n_files;
-    char** content;    
+    wchar_t** content;    
 } TargetDir;
 
 
@@ -62,7 +62,7 @@ TargetDir* readTargetDir(char* path){
     }
     
     //Leer el contenido de los archivos
-    td->content = malloc(sizeof(char*)*td->n_files);
+    td->content = malloc(sizeof(wchar_t*)*td->n_files);
     for(int i = 0; i<td->n_files; i++){
         char file_path[PATH_MAX];
         sprintf(file_path, "%s/%s", path, td->filenames[i]);
@@ -70,8 +70,12 @@ TargetDir* readTargetDir(char* path){
         fseek(f, 0, SEEK_END);
         long filesize = ftell(f);
         fseek(f, 0, SEEK_SET);
-        char* content = malloc(sizeof(char) * filesize);
-        fread(content, filesize, 1,  f);
+        char* chontent = malloc(sizeof(char) * (filesize+1));
+        fread(chontent, filesize, 1,  f);
+        // Hay que pasar todo explicitamente ha wchar_t para que huffman no llore
+        wchar_t* content = malloc(sizeof(wchar_t) * (filesize+1));
+        mbstowcs(content, chontent, filesize);
+        printf("%ls\n", content);
         
         td->content[i] = content;
     }    
