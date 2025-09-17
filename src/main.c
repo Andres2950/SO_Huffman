@@ -10,6 +10,16 @@ void hola_mundo(char *c){
   printf("Hola Mundo!\n");
 }
 
+int comprimir(char* src, char* dst){
+    // Leer src todos los archivos en src (nombre y contenido)
+    TargetDir* td = readTargetDir(src);  
+    //TODO: Hacer Huffman con el contenido de todos lo archivos    
+    //TODO: traducir cada texto a binario
+    //TODO: escribir el archivo comprimido
+    // arbol \n filename \t bytes del contenido \t contenido \n
+}
+
+
 int main(int argc, char* argv[]){
     setlocale(LC_ALL, "es_ES.UTF-8");
     hola_mundo("printf");
@@ -42,6 +52,12 @@ int main(int argc, char* argv[]){
     FILE* f = fopen("binario.b", "w");
     write_binary_to_file(f, "0100011101001001010101000010000001000111010101010100010");
     fclose(f);
+
+    //ejemplo leer directorio
+    TargetDir* td = readTargetDir(".");
+    for(int i = 0; i<td->n_files; i++){
+        printf("%s\n%s\n\n", td->filenames[i], td->content[i]);
+    }
 
     return 0;
 }

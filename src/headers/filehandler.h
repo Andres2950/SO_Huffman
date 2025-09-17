@@ -6,9 +6,78 @@
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <linux/limits.h>
+
 
 #ifndef FILEHANDLER_C
 
+typedef struct{
+    char* path;
+    char** filenames;
+    int n_files;
+    char** content;    
+} TargetDir;
+
+
+int isdir(const char* path){
+    struct stat stat_info;
+    stat(path, &stat_info);
+    return !S_ISDIR(stat_info.st_mode);    
+}
+
+int isfile(const char* path){
+    struct stat stat_info;
+    stat(path, &stat_info);
+    return S_ISREG(stat_info.st_mode);    
+}
+
+
+// Lee la información de los archivos de texto en una carpeta
+TargetDir* readTargetDir(char* path){    
+    // Confirmar que path es un directorio    
+    if(isdir(path)){
+        return NULL;
+    }
+        
+    TargetDir* td = malloc(sizeof(TargetDir));
+    td->path = path;    
+
+    //Obtener archivos de directorio
+    DIR* d = opendir(path);
+    struct dirent* file;
+    file = readdir(d);
+    while(file!=NULL){        
+        char file_path[PATH_MAX];
+        sprintf(file_path, "%s/%s", path, file->d_name);
+        if(isfile(file_path)){
+            // Agregar archivo a TargetDir
+            //TODO: checkear que el archivo sea texto
+            td->n_files++;
+            td->filenames = realloc(td->filenames, sizeof(char*) * td->n_files); 
+            td->filenames[td->n_files-1] = file->d_name;
+        }
+        file = readdir(d);
+    }
+    
+    //Leer el contenido de los archivos
+    td->content = malloc(sizeof(char*)*td->n_files);
+    for(int i = 0; i<td->n_files; i++){
+        char file_path[PATH_MAX];
+        sprintf(file_path, "%s/%s", path, td->filenames[i]);
+        FILE* f = fopen(file_path, "r");
+        fseek(f, 0, SEEK_END);
+        long filesize = ftell(f);
+        fseek(f, 0, SEEK_SET);
+        char* content = malloc(sizeof(char) * filesize);
+        fread(content, filesize, 1,  f);
+        
+        td->content[i] = content;
+    }    
+
+    return td;
+}
 
 // Escribe en un archivo el codigo binario que contiene la str.
 // str solo puede contener '0' o '1'.
