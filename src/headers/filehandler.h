@@ -158,6 +158,8 @@ int huffman_write_file(const char *dst, TargetDir* td, char **dict, Node* tree) 
     }
 
     fclose(file);
+
+    return 0;
 }
 
 

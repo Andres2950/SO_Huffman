@@ -23,8 +23,8 @@ int comprimir(char* src, char* dst){
     for(int i = 0; i<td->n_files; i++){
         wcscat(text, td->content[i]);
     }    
-    text[text_size-1] = L'0';
-    printf("%ls\n", text);
+    //text[text_size-1] = L'0';
+    //printf("%ls\n", text);
 
     //Huffman    
     int* ft = new_frequency_table();
@@ -37,7 +37,8 @@ int comprimir(char* src, char* dst){
     char **dictionary = huffman_create_dictionary(huffman_tree);    
 
     
-    //TODO: escribir el archivo comprimido    
+    //TODO: escribir el archivo comprimido  
+    return 0;  
 }
 
 
@@ -75,7 +76,7 @@ int main(int argc, char* argv[]){
     // fclose(f);
 
     //ejemplo leer directorio
-    TargetDir* td = readTargetDir("./ej");
+    //TargetDir* td = readTargetDir("./ej");
     // for(int i = 0; i<td->n_files; i++){
     //     printf("%s\n%ls\n\n", td->filenames[i], td->content[i]);
     // }
