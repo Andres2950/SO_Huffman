@@ -166,8 +166,6 @@ char** huffman_create_dictionary(Node *tree){
 
 
 
-
-
 int* new_frequency_table(){
   int i;
   int *ft = malloc(sizeof(int) * MAX_UNICODE);
