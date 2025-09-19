@@ -178,6 +178,7 @@ int* new_frequency_table(){
 
 void frequency_table_add_text(int *ft, wchar_t *text){
   for(int i = 0; text[i] != L'\0'; ++i){
+    //printf("%d,%d\n", text[i], L'0');
     ft[text[i]]++;
   }
 }

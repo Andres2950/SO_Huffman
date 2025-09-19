@@ -13,6 +13,8 @@
 
 #ifndef FILEHANDLER_C
 
+// Struct with the path of a directory, a list of the
+// files inside it and their contents
 typedef struct{
     char* path;
     char** filenames;
@@ -42,7 +44,9 @@ TargetDir* readTargetDir(char* path){
     }
         
     TargetDir* td = malloc(sizeof(TargetDir));
-    td->path = path;    
+    td->path = path;
+    td->n_files = 0; 
+    td->filenames = NULL;
 
     //Obtener archivos de directorio
     DIR* d = opendir(path);
@@ -53,14 +57,17 @@ TargetDir* readTargetDir(char* path){
         sprintf(file_path, "%s/%s", path, file->d_name);
         if(isfile(file_path)){
             // Agregar archivo a TargetDir
-            //TODO: checkear que el archivo sea texto
+            //TODO: checkear que el archivo sea texto. HAY QUE HACER ESTO        
             td->n_files++;
-            td->filenames = realloc(td->filenames, sizeof(char*) * td->n_files); 
-            td->filenames[td->n_files-1] = file->d_name;
+            td->filenames = realloc(td->filenames, sizeof(char*) * td->n_files); //memory leak            
+            td->filenames[td->n_files-1] = malloc(sizeof(char)*(PATH_MAX+1));
+            strcpy(td->filenames[td->n_files-1], file->d_name);
         }
+        
         file = readdir(d);
     }
     
+    closedir(d);
     //Leer el contenido de los archivos
     td->content = malloc(sizeof(wchar_t*)*td->n_files);
     for(int i = 0; i<td->n_files; i++){
@@ -73,13 +80,15 @@ TargetDir* readTargetDir(char* path){
         char* chontent = malloc(sizeof(char) * (filesize+1));
         fread(chontent, filesize, 1,  f);
         // Hay que pasar todo explicitamente ha wchar_t para que huffman no llore
-        wchar_t* content = malloc(sizeof(wchar_t) * (filesize+1));
-        mbstowcs(content, chontent, filesize);
-        printf("%ls\n", content);
+        int dsize =mbstowcs(NULL,chontent,0)+1;
+        wchar_t* content = malloc(sizeof(wchar_t) * dsize);        
+        mbstowcs(content, chontent, dsize);        
         
         td->content[i] = content;
+        fclose(f);
     }    
 
+    
     return td;
 }
 
@@ -122,43 +131,33 @@ int write_binary_to_file(FILE* f, const char* str){
    return 0;
 }
 
-// La vara pero manejando el dict
 
-int huffman_write_file(const wchar_t *str, char **dict, const char *filename) {
-    FILE *file = fopen(filename, "wb"); //wb escribe en binario (linux y sistemas posix ignoran el b)
+// Escribe el archivo comprimido
+// Formato: arbol \n filename \t bytes del contenido \t contenido \n
+int huffman_write_file(const char *dst, TargetDir* td, char **dict, Node* tree) {
+    FILE *file = fopen(dst, "wb"); //wb escribe en binario (linux y sistemas posix ignoran el b)
     if (file == NULL) return -1;
 
-    //Contamos la cantidad de caracteres y la escribimos 
-    int unique_char = 0;
-    for (int i = 0; i < MAX_UNICODE; i++) {
-        if (dict[i] && dict[i][0] != '\0') unique_char++;
-    }
-    //fwrite escribe en binario
-    fwrite(&unique_char, sizeof(int), 1, file);
 
-    //escribir el diccionario
-    for (int i = 0; i < MAX_UNICODE; i++) {
-        if (dict[i] && dict[i][0] == '\0') continue;
+    //Escribir arbol; no se como ._.XD
 
-        wchar_t c = i; 
-        int code_len = strlen(dict[i]);
-        int code_bits = 0;
-        //Convertir el codigo a bits de alguna forma no se 
-        for (int j = 0; j < code_len; j++){
-            //Code bits deberia ser un entero con el codigo de la letra 
-            //No se como hacer esto, poner los 1 y 0 en code_bits de alguna forma 
-        }
+    fputc('\n', file);
+    
+    // Escribir archivos
 
-        // escribir el caracter del diccionario, y el codigo 
-        fwrite(&c, sizeof(wchar_t), 1, file);
-        fwrite(&code_bits, sizeof(int), 1, file);
+    for(int i=0; i<td->n_files; i++){
+        fprintf(file, "%s\t", td->filenames[i]);
+
+        // int filesize = wcslen(td->content[i]);
+        // fprintf(file, "%d\t", filesize);        
+
+        // char* binary = huffman_translate(td->content[i], filesize, dict); //prueba con todo el texto        
+                
+        // write_binary_to_file(file, binary);        
+        // fprintf(file,"\n");
     }
 
-    // AQUI PONER ALGUN TIPO DE CARACTER ESPECIAL PARA SEPARAR EL CONTENIDO
-
-    //  iterar por la string revisando el codigo del simbolo
-    //  Escribir el codigo del simbolo en binario en el archivo y hacer eso para cada caracter en la string 
-
+    fclose(file);
 }
 
 
