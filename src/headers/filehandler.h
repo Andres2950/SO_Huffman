@@ -155,23 +155,32 @@ long str_to_number(char *str){
   return num;
 }
 
-// Escribe el archivo comprimido
-// Formato: diccionario \n sting filename \t string bytes del contenido \t codigo \n
-int targetdir_write(const char *dst, TargetDir* td, char **dict, int* ft) {
+// Escribe un archivo que contiene la version comprimida del contenido de TargetDir.
+// El argumento td debe haber pasado por targetdir_compress.
+// TODO: robustez, retornar -1 si no se ha llamado a targetdir_compress.
+// 
+// Formato del archivo final: diccionario \n archivo comprimido \n [archivo comprimido \n ...]
+//
+// Formato del diccionario: cantidad de entradas(int 4b) | [entrada ...]
+// Formato de entrada: caracter(uchar 1b) | tamaño de codigo(int 4b) | codigo(char tamaño*bytes)
+//
+// Formato del archivo comprimido: filename(string) \t contentsize(size_t) \t codigo (contensize*bytes)
+//       
+int targetdir_write(const char *dst, TargetDir* td, char **dict) {
     FILE *file = fopen(dst, "wb"); //wb escribe en binario (linux y sistemas posix ignoran el b)
     if (file == NULL) return -1;
 
 
-    // Escribir diccionario
-    // Formato: 4b de wchar, 4b int de frecuencia, 4b int de codigo
+    // Escribir cantidad de entradas del diccionario    
     int size_dict = 0;
     for (int i = 0; i < MAX_BYTE; i++){
       if(dict[i] && dict[i][0] != '\0'){
         size_dict++;
       }
     }
-
     fwrite(&size_dict, sizeof(int), 1, file);
+
+    // Escribir entradas del diccionario
     int n_cod;
     for (int i = 0; i < MAX_BYTE; i++){
         if(dict[i] && dict[i][0] != '\0'){                        
@@ -182,16 +191,15 @@ int targetdir_write(const char *dst, TargetDir* td, char **dict, int* ft) {
             fwrite(dict[i], sizeof(char), code_len, file);
         }
     }
-
     fputc('\n', file);
     
     // Escribir archivos
     for (int i = 0; i < td->n_files; i++){
-        // Escribir filename
+        // filename
         fprintf(file, "%s\t", td->filenames[i]);
-        // Escribir bytes del contenido
+        // content_size
         fprintf(file, "%zu\t", td->b_content_sizes[i]);
-        // Codigo
+        // Codigo en binario
         write_binary_to_file(file, td->b_content[i]); 
 
         fputc('\n', file);
