@@ -76,11 +76,11 @@ int main(int argc, char** argv){
     // Leer todos los archivos en directorio src (nombre y contenido)
     TargetDir* td = read_targetdir(src);  
     if(td == NULL){
-        printf("huf: %s is not a directory.", src);
+        printf("huff: %s is not a directory.", src);
         return -1;
     }
     if(td->n_files == 0){        
-        printf("huf: %s is empty.", src);
+        printf("huff: %s is empty.", src);
         return -1;
     }
 
@@ -116,9 +116,9 @@ int main(int argc, char** argv){
     int r = targetdir_write(dst, td, dictionary);
 
     if(r){
-        printf("huf: error occurred while opening or creating %s.", dst);
+        printf("huff: error occurred while opening or creating %s.", dst);
     }
     
-    printf("huf: compilation successful");
-    return -1;  
+    printf("huff: compressed successfully \n");
+    return 0;  
 }

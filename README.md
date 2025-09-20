@@ -3,14 +3,14 @@ huffmand de maes con compresores y otros
 <https://www.canva.com/design/DAGzRKU64Qw/3fKzwkEveNyLkyUySQsIeA/edit?utm_content=DAGzRKU64Qw&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton>
 
 ## Funcionalidades a Implementar
-- [ ] Considerar signos de puntuación, acentos y otros símbolos especiales
-- [ ] Comprimir los archivos de texto en un directorio dado
-- [ ] Generar un único archivo binario con el resultado de la compresión
-- [ ] Diseñar otro programa que descomprima el archivo y recupere el directorio original
-- [ ] Implemetar una versión serial
+- [x] Considerar signos de puntuación, acentos y otros símbolos especiales
+- [x] Comprimir los archivos de texto en un directorio dado
+- [x] Generar un único archivo binario con el resultado de la compresión
+- [x] Diseñar otro programa que descomprima el archivo y recupere el directorio original
+- [x] Implemetar una versión serial
 - [ ] Implementar una vesión paralela con fork()
 - [ ] Implementar una versión concurrente usando pthread()
-- Tomar el tiempo de la corrida en milisegundos
+- [ ] Tomar el tiempo de la corrida en milisegundos
 ## Informe de latex
 - [ ] Explicación de la función fork()
 - [ ] Explicación de pthread

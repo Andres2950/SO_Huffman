@@ -44,38 +44,7 @@ int comprimir(char* src, char* dst){
 
 
 int unzip(const char* src){
-  FILE *f = fopen(src, "rb");
-  if(!f) return -1;
   
-  int size_dict = 0;
-  fread(&size_dict, sizeof(int), 1, f);
-
-  char **dictionary = malloc(sizeof(char*) * 256);
-  for (int i = 0; i < 256; ++i) dictionary[i] = NULL;
-
-  for (int i = 0; i < size_dict; ++i) {
-    unsigned char byte;
-    int code_len;
-    fread(&byte, sizeof(unsigned char), 1, f);
-    fread(&code_len, sizeof(int), 1, f);
-
-    char *code_str = malloc(code_len + 1);
-    fread(code_str, sizeof(char), code_len, f);
-    code_str[code_len] = '\0';
-    dictionary[byte] = code_str;
-  }
-  fgetc(f);
-  
-  Node *huffman_tree = rebuild_huffman_tree(dictionary);
-  char filename[1024];
-  int total_bits;
-  while(fscanf(f, "%1023[^\t]\t", filename) == 1){
-    if(fscanf(f, "%d\t", &total_bits) != 1) break;
-  
-      huffman_decompress_bits(huffman_tree, f, total_bits, filename);
-      fgetc(f);
-  }
-  fclose(f);
   return 0;
 }
 
