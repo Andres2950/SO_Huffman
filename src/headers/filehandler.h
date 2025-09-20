@@ -130,6 +130,7 @@ int write_binary_to_file(FILE* f, const char* str){
    }   
    return 0;
 }
+
 // Traduce el contenido de cada archivo de TargetDir usando el diccionario
 // La representacion codificada se guarda como un string en b_content
 int targetdir_compress(TargetDir* td, char **dict){
@@ -142,17 +143,6 @@ int targetdir_compress(TargetDir* td, char **dict){
         td->b_content_sizes[i] = strlen(binary);
     }
     return 0;
-}
-
-
-long str_to_number(char *str){
-  int size = strlen(str);
-  long num = 1;
-  for(int i = 0; i < size; ++i){
-    num *= 10;
-    num += (str[i]-48);
-  }
-  return num;
 }
 
 // Escribe un archivo que contiene la version comprimida del contenido de TargetDir.
