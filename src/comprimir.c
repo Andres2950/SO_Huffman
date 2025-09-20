@@ -24,26 +24,54 @@ int main(int argc, char** argv){
     
     char* src;
     char* dst;
-    int execution_mode;
+    int execution_mode = EXEC_MODE_SERIAL; //Default
 
     //Input
-    int opterr = 0;
-    int c;
-    
+    //opterr = 0;
+    int c;    
     
     while((c = getopt(argc, argv, "spc")) != -1){
-        printf("%d", c);
+        switch (c){
+        case 's':
+            execution_mode = EXEC_MODE_SERIAL;
+            break;
+
+        case 'p':
+            execution_mode = EXEC_MODE_PARALLEL;
+            break;
+
+        case 'c':
+            execution_mode = EXEC_MODE_CONCURRENT;
+            break;
+        
+        case '?':
+            return 1;
+            break;
+        
+        default:        
+            abort();
+        }
     }
 
-    for (size_t i = 0; i < argc; i++){
-        printf("%s", argv[i]);
+    if(argc > optind+2){
+        printf("huff: too many arguments.\n");
+        return 1;
+    } 
+
+    if(optind == argc){
+        printf("huff: missing source directory.\n");        
+        return 1;
     }
+    src = argv[optind];
+
+    if(optind+1 == argc){
+        printf("huff: missing destination file.\n");
+        return 1;
+    }
+    dst = argv[optind+1];    
+
+    // Program      
     
-
-    
-
-
-
     // // Leer src todos los archivos en src (nombre y contenido)
     // TargetDir* td = read_targetdir(src);  
     // //Hacer Huffman con el contenido de todos lo archivos    
