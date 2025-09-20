@@ -69,9 +69,8 @@ int main(int argc, char** argv){
         return 1;
     }
     dst = argv[optind+1];    
-
     
-    printf("%s, %s\n", src, dst);
+    
     // Program      
     
     // Leer todos los archivos en directorio src (nombre y contenido)
@@ -109,9 +108,7 @@ int main(int argc, char** argv){
     char **dictionary = huffman_create_dictionary(huffman_tree);        
     
     free(text);
-    free(ft);
-
-    printf("%s, %s\n", src, dst);
+    free(ft);    
     
     // Escribir el archivo comprimido  
     targetdir_compress(td, dictionary);
