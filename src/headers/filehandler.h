@@ -59,10 +59,9 @@ TargetDir* read_targetdir(char* path){
         char file_path[PATH_MAX];
         sprintf(file_path, "%s/%s", path, file->d_name);
         if(isfile(file_path)){
-            // Agregar archivo a TargetDir
-            //TODO: checkear que el archivo sea texto. HAY QUE HACER ESTO        
+            // Agregar archivo a TargetDir            
             td->n_files++;
-            td->filenames = realloc(td->filenames, sizeof(char*) * td->n_files); //memory leak            
+            td->filenames = realloc(td->filenames, sizeof(char*) * td->n_files);
             td->filenames[td->n_files-1] = malloc(sizeof(char)*(PATH_MAX+1));
             strcpy(td->filenames[td->n_files-1], file->d_name);
         }

@@ -10,9 +10,9 @@
 #define EXEC_MODE_PARALLEL 1
 #define EXEC_MODE_CONCURRENT 2
 
-// Use comprimir [options] src dst
-// 
-// src must be a directory
+// Usage: huff [options] src dst
+// Compress src directory into dst file.
+// Only handles plaintext files.
 //
 // Options: 
 //          -s serial
@@ -72,9 +72,16 @@ int main(int argc, char** argv){
 
     // Program      
     
-    // // Leer src todos los archivos en src (nombre y contenido)
-    // TargetDir* td = read_targetdir(src);  
-    // //Hacer Huffman con el contenido de todos lo archivos    
+    // Leer todos los archivos en directorio src (nombre y contenido)
+    TargetDir* td = read_targetdir(src);  
+    if(td == NULL){
+        printf("huf: %s is not a directory.", src);
+    }
+    if(td->n_files == 0){
+        printf("huf: %s is empty.", src);
+    }
+
+    //Hacer Huffman con el contenido de todos lo archivos        
     // size_t text_size = 0;
     // for(int i = 0; i< td->n_files; i++){
     //     text_size += td->file_sizes[i];
