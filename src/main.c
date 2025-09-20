@@ -6,84 +6,82 @@
 
 int *ft;
 
-void hola_mundo(char *c){
-  printf("Hola Mundo!\n");
-}
-
 int comprimir(char* src, char* dst){
     // Leer src todos los archivos en src (nombre y contenido)
     TargetDir* td = read_targetdir(src);  
     //Hacer Huffman con el contenido de todos lo archivos    
-    int text_size = 1;
-    for(int i = 0; i<td->n_files; i++){
-        text_size += wcslen(td->content[i]);
+    size_t text_size = 0;
+    for(int i = 0; i< td->n_files; i++){
+        text_size += td->file_sizes[i];
     }
     
-    wchar_t* text = calloc(text_size, sizeof(wchar_t));
-    for(int i = 0; i<td->n_files; i++){
-        wcscat(text, td->content[i]);
-    }    
-    text[text_size-1] = L'0';    
+    unsigned char* text = malloc(text_size);
+    size_t offset = 0;
+    for(int i = 0; i < td->n_files; i++){
+        memcpy(text + offset, td->content[i], td->file_sizes[i]);
+        offset += td->file_sizes[i];
+    }
 
     //Huffman    
     int* ft = new_frequency_table();
-    frequency_table_add_text(ft, text);            
+    frequency_table_add_text(ft, text, text_size);            
     LinkedList list;
     init_linked_list(&list);
     linked_list_insert_bulk(&list, ft);        
 
     Node *huffman_tree = create_huffman_binary_tree(&list);
     char **dictionary = huffman_create_dictionary(huffman_tree);    
+    huffman_dictionary_print(dictionary);
     
-    // Comprimir archivos
+    free(text);
+    free(ft);
+    
+    //TODO: escribir el archivo comprimido  
     targetdir_compress(td, dictionary);
-
-    // Escribir el archivo comprimido  
     targetdir_write("./zip.huf", td, dictionary, ft);
     return 0;  
 }
 
 
+int unzip(const char* src){
+  FILE *f = fopen(src, "rb");
+  if(!f) return -1;
+  
+  int size_dict = 0;
+  fread(&size_dict, sizeof(int), 1, f);
+
+  char **dictionary = malloc(sizeof(char*) * 256);
+  for (int i = 0; i < 256; ++i) dictionary[i] = NULL;
+
+  for (int i = 0; i < size_dict; ++i) {
+    unsigned char byte;
+    int code_len;
+    fread(&byte, sizeof(unsigned char), 1, f);
+    fread(&code_len, sizeof(int), 1, f);
+
+    char *code_str = malloc(code_len + 1);
+    fread(code_str, sizeof(char), code_len, f);
+    code_str[code_len] = '\0';
+    dictionary[byte] = code_str;
+  }
+  fgetc(f);
+  
+  Node *huffman_tree = rebuild_huffman_tree(dictionary);
+  char filename[1024];
+  int total_bits;
+  while(fscanf(f, "%1023[^\t]\t", filename) == 1){
+    if(fscanf(f, "%d\t", &total_bits) != 1) break;
+  
+      huffman_decompress_bits(huffman_tree, f, total_bits, filename);
+      fgetc(f);
+  }
+  fclose(f);
+  return 0;
+}
+
 int main(int argc, char* argv[]){
     setlocale(LC_ALL, "es_ES.UTF-8");
-    // hola_mundo("printf");
-
-    // LinkedList list;
-    // ft = new_frequency_table();
-    // wchar_t *texto_perron = L"COMO COME COCORITO COME COMO COSMONAUTA áéíóúñ";
-    // printf("---------------------- cadena -----------------\n");
-    // for (int i = 0; texto_perron[i] != L'\0'; i++){
-    //     printf("char: '%lc', unicode: %u\n", texto_perron[i],texto_perron[i]);
-    // }
-
-    // frequency_table_add_text(ft, texto_perron);
-    // printf("---------------------- FRACUENCY TABLE -----------------\n");
-    // frequency_table_print(ft);
-    // init_linked_list(&list);
-    // linked_list_insert_bulk(&list, ft);
-    // printf("-------------------------- LINKED LIST --------------------\n");
-    // linked_list_print(&list);
-
-    // Node *huffman_tree = create_huffman_binary_tree(&list);
-    // char **dictionary = huffman_create_dictionary(huffman_tree);
-
-    // printf("--------------------------- TREE ---------------------------\n");
-    // huffman_binary_tree_print(huffman_tree, 0);
-    // printf("---------------------------------- DICCIONARIO --------------------------\n");
-    // huffman_dictionary_print(dictionary);
-
-    //Ejemplo escribir binario
-    // FILE* f = fopen("binario.b", "w");
-    // write_binary_to_file(f, "0100011101001001010101000010000001000111010101010100010");
-    // fclose(f);
-
-    //ejemplo leer directorio
-    //TargetDir* td = readTargetDir("./ej");
-    // for(int i = 0; i<td->n_files; i++){
-    //     printf("%s\n%ls\n\n", td->filenames[i], td->content[i]);
-    // }
-    
     comprimir("./ej", "");
-
+    unzip("./zip.huf");
     return 0;
 }
