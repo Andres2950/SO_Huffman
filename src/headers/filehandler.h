@@ -19,7 +19,8 @@ typedef struct{
     char* path;
     char** filenames;
     int n_files;
-    wchar_t** content;    
+    wchar_t** content; //content of the file       
+    char** b_content; //the string representation of the binary file
 } TargetDir;
 
 
@@ -37,7 +38,7 @@ int isfile(const char* path){
 
 
 // Lee la información de los archivos de texto en una carpeta
-TargetDir* readTargetDir(char* path){    
+TargetDir* read_targetdir(char* path){    
     // Confirmar que path es un directorio    
     if(isdir(path)){
         return NULL;
@@ -131,31 +132,35 @@ int write_binary_to_file(FILE* f, const char* str){
    return 0;
 }
 
+// Traduce el contenido de cada archivo de TargetDir usando el diccionario
+// La representacion codificada se guarda como un string en b_content
+int targetdir_compress(TargetDir* td, char **dict){
+    td->b_content = malloc(sizeof(char*) * td->n_files);
+    for(int i=0; i<td->n_files; i++){
+        int content_s = wcslen(td->content[i]);
+        char* binary = huffman_translate(td->content[i], content_s, dict);
+        td->b_content[i] = binary;
+    }
+}
+
 
 // Escribe el archivo comprimido
-// Formato: arbol \n filename \t bytes del contenido \t contenido \n
-int huffman_write_file(const char *dst, TargetDir* td, char **dict, Node* tree) {
+// Formato: diccionario \n filename \t bytes del contenido \t contenido \n
+int targetdir_write(const char *dst, TargetDir* td, char **dict) {
     FILE *file = fopen(dst, "wb"); //wb escribe en binario (linux y sistemas posix ignoran el b)
     if (file == NULL) return -1;
 
 
-    //Escribir arbol; no se como ._.XD
+    // Escribir diccionario
+    // Formato: 4b de wchar, 4b de frecuencia, 4b de codigo
+    
+
 
     fputc('\n', file);
     
     // Escribir archivos
 
-    for(int i=0; i<td->n_files; i++){
-        fprintf(file, "%s\t", td->filenames[i]);
-
-        // int filesize = wcslen(td->content[i]);
-        // fprintf(file, "%d\t", filesize);        
-
-        // char* binary = huffman_translate(td->content[i], filesize, dict); //prueba con todo el texto        
-                
-        // write_binary_to_file(file, binary);        
-        // fprintf(file,"\n");
-    }
+    
 
     fclose(file);
 

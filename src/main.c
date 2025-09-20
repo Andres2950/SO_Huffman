@@ -12,7 +12,7 @@ void hola_mundo(char *c){
 
 int comprimir(char* src, char* dst){
     // Leer src todos los archivos en src (nombre y contenido)
-    TargetDir* td = readTargetDir(src);  
+    TargetDir* td = read_targetdir(src);  
     //Hacer Huffman con el contenido de todos lo archivos    
     int text_size = 1;
     for(int i = 0; i<td->n_files; i++){
@@ -23,8 +23,7 @@ int comprimir(char* src, char* dst){
     for(int i = 0; i<td->n_files; i++){
         wcscat(text, td->content[i]);
     }    
-    //text[text_size-1] = L'0';
-    //printf("%ls\n", text);
+    text[text_size-1] = L'0';    
 
     //Huffman    
     int* ft = new_frequency_table();
@@ -35,8 +34,10 @@ int comprimir(char* src, char* dst){
 
     Node *huffman_tree = create_huffman_binary_tree(&list);
     char **dictionary = huffman_create_dictionary(huffman_tree);    
-
     
+    // Comprimir archivos
+    targetdir_compress(td, dictionary);
+
     //TODO: escribir el archivo comprimido  
     return 0;  
 }
