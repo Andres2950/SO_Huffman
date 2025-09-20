@@ -8,10 +8,10 @@
 #include <locale.h>
 //#define NUM_SYMBOLS 256 
 #define MAX_UNICODE 0x110000 // El unicode maximo es 10FFFF, etonces necesitmaos un arreglo de 10FFFF+1
-
+#define MAX_BYTE 256
 
 typedef struct Node{
-  wchar_t ch; //wchar para UTF-8
+  unsigned char ch;
   int freq;
   struct Node *left, *right, *next;
 } Node;
@@ -23,7 +23,7 @@ typedef struct {
 
 ////////////////////////////////// -------------------------------
 int* new_frequency_table();
-void frequency_table_add_text(int *ft, wchar_t *text);
+void frequency_table_add_text(int *ft, unsigned char *text, size_t size);
 void frequency_table_print(int *ft);
 void init_linked_list(LinkedList *list);
 void linked_list_insert(LinkedList *list, Node *node);
@@ -33,6 +33,8 @@ Node* create_huffman_binary_tree(LinkedList *list);
 char** huffman_create_dictionary(Node *tree);
 void huffman_dictionary_print(char **dict);
 void huffman_binary_tree_print(Node *root, int depth);
+Node* rebuild_huffman_tree(char **dict);
+void huffman_decompress_bits(Node *tree, FILE *input, int n_bytes, char *filename);
 // ----------------------------------------------------
 #ifndef HUFFMAN_C
 
@@ -61,9 +63,70 @@ void linked_list_insert(LinkedList *list, Node *node){
   }
 }
 
+Node* create_node(){
+  Node *node = malloc(sizeof(Node));
+  node->ch = '+';
+  node->freq = 0;
+  node->left = 0;
+  node->right = 0;
+  node->next = 0;
+  return node;
+}
+
+Node* rebuild_huffman_tree(char **dict){
+  Node *root = create_node();
+
+  for(int i = 0; i < MAX_BYTE; ++i){
+    if(dict[i] && dict[i][0] != '\0'){
+      Node *current = root;
+      char *code = dict[i];
+      int n_code = strlen(code);
+
+      for(int j = 0; j < n_code; ++j){
+        if(code[j] == '0'){
+          if(!current->left)
+            current->left = create_node();
+          current = current->left;
+        } else if (code[j] == '1'){ 
+          if(!current->right)
+            current->right = create_node();
+          current = current->right;
+        }
+      }
+      current->ch = i;
+    }
+  }
+  return root;
+}
+
+
+void huffman_decompress_bits(Node *tree, FILE *input, int total_bits, char *filename){
+  FILE *out = fopen(filename, "wb");
+  Node *current = tree;
+  int bits_read = 0;
+  unsigned char byte;
+
+  while(bits_read < total_bits && fread(&byte, 1, 1, input) == 1){
+    for(int b = 7; b >= 0 && bits_read < total_bits; --b){
+      int bit = (byte >> b) & 1;
+      if(bit == 0) 
+        current = current->left;
+      else
+        current = current->right;
+      if(current->left == 0 && current->right == 0){
+        fputc(current->ch, out);
+        current = tree;
+      }
+      bits_read++;
+    }
+  }
+  fclose(out);
+}
+
+
 void linked_list_insert_bulk(LinkedList *list, int *ft){
   Node *new_node;
-  for (int i = 0; i < MAX_UNICODE; ++i){
+  for (int i = 0; i < MAX_BYTE; ++i){
     if(ft[i] > 0){
       new_node = malloc(sizeof(Node));
       new_node->ch = i;
@@ -80,7 +143,7 @@ void linked_list_insert_bulk(LinkedList *list, int *ft){
 void linked_list_print(LinkedList *list){
   Node *tmp = list->first;
   while(tmp){
-    printf("\tCharacter: %lc Frequency: %d\n", tmp->ch, tmp->freq);
+    printf("\tCharacter: %c Frequency: %d\n", tmp->ch, tmp->freq);
     tmp = tmp->next;
   }
 }
@@ -102,7 +165,7 @@ Node* create_huffman_binary_tree(LinkedList *list){
     first = linked_list_remove_first(list);
     second = linked_list_remove_first(list);
     new_node = malloc(sizeof(Node));
-    new_node->ch = L'+';
+    new_node->ch = '+';
     new_node->freq = first->freq + second->freq;
     new_node->next = 0;
     new_node->right = first;
@@ -126,7 +189,7 @@ int huffman_binary_tree_get_depth(Node *root){
 
 void huffman_binary_tree_print(Node *root, int depth){
   if (root->left == 0 && root->right == 0){
-    printf("\tLetter: %lc\tDepth: %d\n", root->ch, depth);
+    printf("\tLetter: %c\tDepth: %d\n", root->ch, depth);
   } else {
     huffman_binary_tree_print(root->left, depth + 1);
     huffman_binary_tree_print(root->right, depth + 1);
@@ -155,9 +218,9 @@ void huffman_fill_dictionary(Node *root, char **dictionary, char *code, int dept
 
 
 char** huffman_create_dictionary(Node *tree){
-  char **dictionary = malloc(sizeof(char *) * MAX_UNICODE);
+  char **dictionary = malloc(sizeof(char *) * MAX_BYTE);
   int depth = huffman_binary_tree_get_depth(tree) + 1;
-  for (int i = 0; i < MAX_UNICODE; ++i){
+  for (int i = 0; i < MAX_BYTE; ++i){
     dictionary[i] = calloc(depth, sizeof(char));
   }
   huffman_fill_dictionary(tree, dictionary, "", depth);
@@ -167,43 +230,42 @@ char** huffman_create_dictionary(Node *tree){
 
 
 int* new_frequency_table(){
-  int i;
-  int *ft = malloc(sizeof(int) * MAX_UNICODE);
-  for (i = 0; i < MAX_UNICODE; ++i)
+  int *ft = malloc(sizeof(int) * MAX_BYTE);
+  for (int i = 0; i < MAX_BYTE; ++i)
     ft[i] = 0;
   return ft;
 }
 
-void frequency_table_add_text(int *ft, wchar_t *text){
-  for(int i = 0; text[i] != L'\0'; ++i){
-    //printf("%d,%d\n", text[i], L'0');
+void frequency_table_add_text(int *ft, unsigned char *text, size_t size){
+  for(size_t i = 0; i < size; ++i){
     ft[text[i]]++;
   }
 }
 
 void frequency_table_print(int *ft){
-  for(int i = 0; i < MAX_UNICODE; ++i){
+  for(int i = 0; i < MAX_BYTE; ++i){
     if (ft[i] > 0)
-      printf("\ti: %d = ft[i]: %d = char: %lc\n", i, ft[i], i);
+      printf("\ti: %d = ft[i]: %d = char: %c\n", i, ft[i], i);
   }
 }
 
 void huffman_dictionary_print(char **dict){
-    for (int i = 0; i < MAX_UNICODE; ++i){
+    for (int i = 0; i < MAX_BYTE; ++i){
         if(dict[i] && dict[i][0] != '\0'){
-          printf("Unicode:'%lc', i:%d; Huffman Code:'%s'\n", i, i, dict[i]);
       }
     }
-}
+  }
 
-char* huffman_translate(wchar_t* text, int size, char** dictionary){
-  char* binary_code = calloc(2, 1);
+  char* huffman_translate(unsigned char* text, int size, char** dictionary){
+  char* binary_code = calloc(2, sizeof(char));
   int len = 0;
+
   for(int i=0; i<size; i++){
     char* code = dictionary[text[i]];
-    len += strlen(code);
-    binary_code = realloc(binary_code, len);
-    strcat(binary_code, code);
+    int code_len = strlen(code);
+    binary_code = realloc(binary_code, len + code_len + 1);
+    strcpy(binary_code + len, code);
+    len += code_len;
   }
 
   return binary_code;

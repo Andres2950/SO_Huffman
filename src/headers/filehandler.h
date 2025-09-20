@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <linux/limits.h>
-
+#include <math.h>
 
 #ifndef FILEHANDLER_C
 
@@ -19,7 +19,10 @@ typedef struct{
     char* path;
     char** filenames;
     int n_files;
-    wchar_t** content;    
+    unsigned char** content;
+    size_t* file_sizes;
+    char** b_content;
+    size_t* b_content_sizes;
 } TargetDir;
 
 
@@ -37,7 +40,7 @@ int isfile(const char* path){
 
 
 // Lee la información de los archivos de texto en una carpeta
-TargetDir* readTargetDir(char* path){    
+TargetDir* read_targetdir(char* path){    
     // Confirmar que path es un directorio    
     if(isdir(path)){
         return NULL;
@@ -69,26 +72,23 @@ TargetDir* readTargetDir(char* path){
     
     closedir(d);
     //Leer el contenido de los archivos
-    td->content = malloc(sizeof(wchar_t*)*td->n_files);
+    td->content = malloc(sizeof(unsigned char*) * td->n_files);
+    td->file_sizes = malloc(sizeof(size_t) * td->n_files);
+
     for(int i = 0; i<td->n_files; i++){
         char file_path[PATH_MAX];
         sprintf(file_path, "%s/%s", path, td->filenames[i]);
-        FILE* f = fopen(file_path, "r");
+        FILE* f = fopen(file_path, "rb");
         fseek(f, 0, SEEK_END);
-        long filesize = ftell(f);
+        size_t filesize = ftell(f);
         fseek(f, 0, SEEK_SET);
-        char* chontent = malloc(sizeof(char) * (filesize+1));
-        fread(chontent, filesize, 1,  f);
-        // Hay que pasar todo explicitamente ha wchar_t para que huffman no llore
-        int dsize =mbstowcs(NULL,chontent,0)+1;
-        wchar_t* content = malloc(sizeof(wchar_t) * dsize);        
-        mbstowcs(content, chontent, dsize);        
-        
+
+        unsigned char *content = malloc(sizeof(unsigned char) * filesize);
+        fread(content, 1, filesize, f);
         td->content[i] = content;
+        td->file_sizes[i] = filesize;
         fclose(f);
     }    
-
-    
     return td;
 }
 
@@ -130,36 +130,78 @@ int write_binary_to_file(FILE* f, const char* str){
    }   
    return 0;
 }
+// Traduce el contenido de cada archivo de TargetDir usando el diccionario
+// La representacion codificada se guarda como un string en b_content
+int targetdir_compress(TargetDir* td, char **dict){
+    td->b_content = malloc(sizeof(char*) * td->n_files);
+    td->b_content_sizes = malloc(sizeof(size_t) * td->n_files);
+    for(int i=0; i < td->n_files; i++){
+        //int content_s = wcslen(td->content[i]);
+        char* binary = huffman_translate(td->content[i], td->file_sizes[i], dict);
+        td->b_content[i] = binary;
+        td->b_content_sizes[i] = strlen(binary);
+    }
+    return 0;
+}
+
+
+long str_to_number(char *str){
+  int size = strlen(str);
+  long num = 1;
+  for(int i = 0; i < size; ++i){
+    num *= 10;
+    num += (str[i]-48);
+  }
+  return num;
+}
 
 
 // Escribe el archivo comprimido
-// Formato: arbol \n filename \t bytes del contenido \t contenido \n
-int huffman_write_file(const char *dst, TargetDir* td, char **dict, Node* tree) {
+// Formato: diccionario \n sting filename \t string bytes del contenido \t codigo \n
+int targetdir_write(const char *dst, TargetDir* td, char **dict, int* ft) {
     FILE *file = fopen(dst, "wb"); //wb escribe en binario (linux y sistemas posix ignoran el b)
     if (file == NULL) return -1;
 
 
-    //Escribir arbol; no se como ._.XD
+    // Escribir diccionario
+    // Formato: 4b de wchar, 4b int de frecuencia, 4b int de codigo
+    int size_dict = 0;
+    for (int i = 0; i < MAX_BYTE; i++){
+      if(dict[i] && dict[i][0] != '\0'){
+        size_dict++;
+      }
+    }
+
+    fwrite(&size_dict, sizeof(int), 1, file);
+    int n_cod;
+    for (int i = 0; i < MAX_BYTE; i++){
+        if(dict[i] && dict[i][0] != '\0'){                        
+            unsigned char c = i;
+            fwrite(&c, sizeof(unsigned char), 1, file);            
+            int code_len = strlen(dict[i]);      // longitud del código en bits
+            fwrite(&code_len, sizeof(int), 1, file);
+            fwrite(dict[i], sizeof(char), code_len, file);
+
+        }
+    }
 
     fputc('\n', file);
     
     // Escribir archivos
-
-    for(int i=0; i<td->n_files; i++){
+    for (int i = 0; i < td->n_files; i++){
+        // Escribir filename
         fprintf(file, "%s\t", td->filenames[i]);
+        // Escribir bytes del contenido
+        fprintf(file, "%zu\t", td->b_content_sizes[i]);
+        // Codigo
+        write_binary_to_file(file, td->b_content[i]); 
 
-        // int filesize = wcslen(td->content[i]);
-        // fprintf(file, "%d\t", filesize);        
-
-        // char* binary = huffman_translate(td->content[i], filesize, dict); //prueba con todo el texto        
-                
-        // write_binary_to_file(file, binary);        
-        // fprintf(file,"\n");
-    }
+        fputc('\n', file);
+    }        
 
     fclose(file);
+    return 0;
 }
-
 
 #endif
 #endif

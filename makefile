@@ -5,7 +5,7 @@ SRC_HEADERS := $(wildcard src/headers/*.c)
 
 BIN_MAIN := $(OUT_DIR)/main
 
-CFLAGS := -g -I src/headers -Wall -Wextra -fsanitize=address -fsanitize=undefined
+CFLAGS := -g -I src/headers 
 LIBS := -lm
 
 GREEN  := \033[0;32m
