@@ -145,22 +145,40 @@ int targetdir_compress(TargetDir* td, char **dict){
 
 
 // Escribe el archivo comprimido
-// Formato: diccionario \n filename \t bytes del contenido \t contenido \n
-int targetdir_write(const char *dst, TargetDir* td, char **dict) {
+// Formato: diccionario \n sting filename \t string bytes del contenido \t codigo \n
+int targetdir_write(const char *dst, TargetDir* td, char **dict, int* ft) {
     FILE *file = fopen(dst, "wb"); //wb escribe en binario (linux y sistemas posix ignoran el b)
     if (file == NULL) return -1;
 
 
     // Escribir diccionario
-    // Formato: 4b de wchar, 4b de frecuencia, 4b de codigo
-    
-
+    // Formato: 4b de wchar, 4b int de frecuencia, 4b int de codigo
+    for (int i = 0; i < MAX_UNICODE; i++){
+        if(dict[i] && dict[i][0] != '\0'){                        
+            wchar_t wc = i;
+            fwrite(&wc, sizeof(wchar_t), 1, file);            
+            int frequency = ft[i];
+            fwrite(&frequency, sizeof(int), 1, file);
+            int code = atoi(dict[i]);
+            fwrite(&code, sizeof(int), 1, file);
+        }
+    }
 
     fputc('\n', file);
     
     // Escribir archivos
+    for (int i = 0; i < td->n_files; i++){
+        // Escribir filename
+        fprintf(file, "%s\t", td->filenames[i]);
+        // Escribir bytes del contenido
+        int len = strlen(td->b_content[i])/8;
+        if(strlen(td->b_content[i])%8 != 0) len++;
+        fprintf(file, "%d\t", len);
+        // Codigo
+        write_binary_to_file(file, td->b_content[i]); 
 
-    
+        fputc('\n', file);
+    }        
 
     fclose(file);
 

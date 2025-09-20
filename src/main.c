@@ -38,7 +38,8 @@ int comprimir(char* src, char* dst){
     // Comprimir archivos
     targetdir_compress(td, dictionary);
 
-    //TODO: escribir el archivo comprimido  
+    // Escribir el archivo comprimido  
+    targetdir_write("./zip.huf", td, dictionary, ft);
     return 0;  
 }
 
