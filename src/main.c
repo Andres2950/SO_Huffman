@@ -36,9 +36,9 @@ int comprimir(char* src, char* dst){
     free(text);
     free(ft);
     
-    //TODO: escribir el archivo comprimido  
+    // Escribir el archivo comprimido  
     targetdir_compress(td, dictionary);
-    targetdir_write("./zip.huf", td, dictionary, ft);
+    targetdir_write("./zip.huf", td, dictionary);
     return 0;  
 }
 
