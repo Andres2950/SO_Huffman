@@ -70,46 +70,58 @@ int main(int argc, char** argv){
     }
     dst = argv[optind+1];    
 
+    
+    printf("%s, %s\n", src, dst);
     // Program      
     
     // Leer todos los archivos en directorio src (nombre y contenido)
     TargetDir* td = read_targetdir(src);  
     if(td == NULL){
         printf("huf: %s is not a directory.", src);
+        return -1;
     }
-    if(td->n_files == 0){
+    if(td->n_files == 0){        
         printf("huf: %s is empty.", src);
+        return -1;
     }
 
-    //Hacer Huffman con el contenido de todos lo archivos        
-    // size_t text_size = 0;
-    // for(int i = 0; i< td->n_files; i++){
-    //     text_size += td->file_sizes[i];
-    // }
+    //Juntar el texto de los archivos       
+    size_t text_size = 0;
+    for(int i = 0; i< td->n_files; i++){
+        text_size += td->file_sizes[i];
+    }
     
-    // unsigned char* text = malloc(text_size);
-    // size_t offset = 0;
-    // for(int i = 0; i < td->n_files; i++){
-    //     memcpy(text + offset, td->content[i], td->file_sizes[i]);
-    //     offset += td->file_sizes[i];
-    // }
+    unsigned char* text = malloc(text_size);
+    size_t offset = 0;
+    for(int i = 0; i < td->n_files; i++){
+        memcpy(text + offset, td->content[i], td->file_sizes[i]);
+        offset += td->file_sizes[i];
+    }
 
-    // //Huffman    
-    // int* ft = new_frequency_table();
-    // frequency_table_add_text(ft, text, text_size);            
-    // LinkedList list;
-    // init_linked_list(&list);
-    // linked_list_insert_bulk(&list, ft);        
+    //Huffman    
+    int* ft = new_frequency_table();
+    frequency_table_add_text(ft, text, text_size);            
+    LinkedList list;
+    init_linked_list(&list);
+    linked_list_insert_bulk(&list, ft);        
 
-    // Node *huffman_tree = create_huffman_binary_tree(&list);
-    // char **dictionary = huffman_create_dictionary(huffman_tree);    
-    // huffman_dictionary_print(dictionary);
+    Node *huffman_tree = create_huffman_binary_tree(&list);
+    char **dictionary = huffman_create_dictionary(huffman_tree);        
     
-    // free(text);
-    // free(ft);
+    free(text);
+    free(ft);
+
+    printf("%s, %s\n", src, dst);
     
-    // // Escribir el archivo comprimido  
-    // targetdir_compress(td, dictionary);
-    // targetdir_write("./zip.huf", td, dictionary);
-    // return 0;  
+    // Escribir el archivo comprimido  
+    targetdir_compress(td, dictionary);
+    
+    int r = targetdir_write(dst, td, dictionary);
+
+    if(r){
+        printf("huf: error occurred while opening or creating %s.", dst);
+    }
+    
+    printf("huf: compilation successful");
+    return -1;  
 }
