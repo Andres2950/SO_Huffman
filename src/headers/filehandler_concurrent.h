@@ -102,25 +102,75 @@ typedef struct{
     int index;
 } compress_file_arg;
 
-void* compress_file(void* arg){
+
+void* compress_file(void* arg){        
     compress_file_arg* cfa = arg;    
     int i = cfa->index;
-    char* binary = huffman_translate(cfa->td->content[i], cfa->td->file_sizes[i], cfa->dict);
+    char cero = 0;
+    char uno = 1;
+    //The binary size will not be more than the uncompressed size     
+    char* binary = malloc(cfa->td->file_sizes[i]); 
+
+    char byte = 0;
+    int byte_counter=0;
+    int bit_counter =0;
+    size_t total_bit_size = 0;
+    char bit;
+    
+    // por cada caracter
+    for(int j=0; j<cfa->td->file_sizes[i]; j++){
+        int caracter = cfa->td->content[i][j];
+        //por cada bit de codigo
+        for(int k=0; k<strlen(cfa->dict[caracter]); k++){
+            char bitchar = cfa->dict[caracter][k];
+            //Insertar el bit
+            if(bitchar=='0'){   
+                bit = cero;            
+            }else if(bitchar=='1'){
+                bit = uno;
+            }else{
+                return (void*)-1; //str invalido
+            }
+            byte = byte << 1;
+            byte = byte | bit;
+            bit_counter++;
+
+            //Escribe el byte si ya esta lleno
+            if(bit_counter==8){
+                binary[byte_counter] = byte;
+                bit_counter=0;
+                byte_counter++;
+            }              
+            total_bit_size++;  
+        }   
+        //Escribe el byte si es el ultimo
+        if(j==cfa->td->file_sizes[i]-1 && bit_counter!=0){
+            //Rellenar con ceros
+            while(bit_counter!=8){
+                byte = byte << 1;
+                bit_counter++;
+            }
+            binary[byte_counter] = byte;
+            byte_counter++;
+        }
+    }
+    
     cfa->td->b_content[i] = binary;
-    cfa->td->b_content_sizes[i] = strlen(binary);
+    cfa->td->b_content_sizes[i] = total_bit_size; 
     free(cfa);
 }
 
-
 // Traduce el contenido de cada archivo de TargetDir usando el diccionario
-// La representacion codificada se guarda como un string en b_content
+// La representacion codificada se guarda como binario en b_content
+// La cantidad de bits de codigo se guarda en b_content_size
 int targetdir_compress_concurrent(TargetDir* td, char **dict){
     td->b_content = malloc(sizeof(char*) * td->n_files);
     td->b_content_sizes = malloc(sizeof(size_t) * td->n_files);
 
     pthread_t* pid = malloc(sizeof(pthread_t) * td->n_files);
 
-    for(int i = 0; i<td->n_files; i++){
+    // por cada archivo
+    for(int i=0; i < td->n_files; i++){           
         compress_file_arg* cfa = malloc(sizeof(compress_file_arg));
         cfa->index = i;
         cfa->td = td;
@@ -128,11 +178,12 @@ int targetdir_compress_concurrent(TargetDir* td, char **dict){
 
         pthread_create(&pid[i], NULL, compress_file, (void*) cfa);
     }
-    
+
     for(int i = 0; i<td->n_files; i++){
        pthread_join(pid[i], NULL);
     }    
-    free(pid);    
+    free(pid); 
+    return 0;
 }
 
 #endif

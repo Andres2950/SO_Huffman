@@ -98,55 +98,69 @@ TargetDir* read_targetdir(char* path){
     return td;
 }
 
-// Escribe en un archivo el codigo binario que contiene la str.
-// str solo puede contener '0' o '1'.
-int write_binary_to_file(FILE* f, const char* str){
-    char byte = 0;
-    int byte_counter=0;
-    char bit;
-    char cero = 0;
-    char uno = 1;
-    for(int i=0; i<strlen(str); i++){            
-        //Insertar el bit
-        if(str[i]=='0'){   
-            bit = cero;            
-        }else if(str[i]=='1'){
-            bit = uno;
-        }else{
-            return -1; //str invalido
-        }
-        byte = byte << 1;
-        byte = byte | bit;
-        byte_counter++;
 
-        //Escribe el byte si ya esta lleno
-        if(byte_counter==8){
-            fputc(byte, f);
-            byte_counter=0;
-        }
-        //Escribe el byte si el ultimo
-        if(i==strlen(str)-1 && byte_counter!=0){
-            //Rellenar con ceros
-            while(byte_counter!=8){
-                byte = byte << 1;
-                byte_counter++;
-            }
-            fputc(byte, f);
-        }
-   }   
-   return 0;
-}
 
 // Traduce el contenido de cada archivo de TargetDir usando el diccionario
-// La representacion codificada se guarda como un string en b_content
+// La representacion codificada se guarda como binario en b_content
+// La cantidad de bits de codigo se guarda en b_content_size
 int targetdir_compress(TargetDir* td, char **dict){
+    char cero = 0;
+    char uno = 1;
+
     td->b_content = malloc(sizeof(char*) * td->n_files);
     td->b_content_sizes = malloc(sizeof(size_t) * td->n_files);
-    for(int i=0; i < td->n_files; i++){
-        //int content_s = wcslen(td->content[i]);
-        char* binary = huffman_translate(td->content[i], td->file_sizes[i], dict);
+
+    // por cada archivo
+    for(int i=0; i < td->n_files; i++){           
+        //The binary size will not be more than the uncompressed size     
+        char* binary = malloc(td->file_sizes[i]); 
+
+        char byte = 0;
+        int byte_counter=0;
+        int bit_counter =0;
+        size_t total_bit_size = 0;
+        char bit;
+        
+        // por cada caracter
+        for(int j=0; j<td->file_sizes[i]; j++){
+            int caracter = td->content[i][j];
+            //por cada bit de codigo
+            for(int k=0; k<strlen(dict[caracter]); k++){
+                char bitchar = dict[caracter][k];
+                //Insertar el bit
+                if(bitchar=='0'){   
+                    bit = cero;            
+                }else if(bitchar=='1'){
+                    bit = uno;
+                }else{
+                    return -1; //str invalido
+                }
+                byte = byte << 1;
+                byte = byte | bit;
+                bit_counter++;
+
+                //Escribe el byte si ya esta lleno
+                if(bit_counter==8){
+                    binary[byte_counter] = byte;
+                    bit_counter=0;
+                    byte_counter++;
+                }              
+                total_bit_size++;  
+            }   
+            //Escribe el byte si es el ultimo
+            if(j==td->file_sizes[i]-1 && bit_counter!=0){
+                //Rellenar con ceros
+                while(bit_counter!=8){
+                    byte = byte << 1;
+                    bit_counter++;
+                }
+                binary[byte_counter] = byte;
+                byte_counter++;
+            }
+        }
+        
         td->b_content[i] = binary;
-        td->b_content_sizes[i] = strlen(binary);
+        td->b_content_sizes[i] = total_bit_size;            
     }
     return 0;
 }
@@ -196,7 +210,9 @@ int targetdir_write(const char *dst, TargetDir* td, char **dict) {
         // content_size
         fprintf(file, "%zu\t", td->b_content_sizes[i]);
         // Codigo en binario
-        write_binary_to_file(file, td->b_content[i]); 
+        size_t byte_size = td->b_content_sizes[i]/8;
+        if(td->b_content_sizes[i]%8 > 0)byte_size++;
+        fwrite(td->b_content[i], 1, byte_size, file); 
 
         fputc('\n', file);
     }        

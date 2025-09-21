@@ -93,8 +93,7 @@ int main(int argc, char** argv){
         return 0;
         break;
     }    
-    
-    printf("am I?\n");
+        
 
     if(td == NULL){
         printf("huff: %s is not a directory.\n", src);
@@ -138,7 +137,7 @@ int main(int argc, char** argv){
         targetdir_compress(td, dictionary);
         break;
     case EXEC_MODE_CONCURRENT:
-        targetdir_compress_concurrent(td, dictionary);
+        targetdir_compress_concurrent(td, dictionary);        
         break;
     case EXEC_MODE_PARALLEL:
         printf("huff: execution mode not supported.\n");
