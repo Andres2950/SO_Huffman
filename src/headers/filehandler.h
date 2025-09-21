@@ -11,7 +11,10 @@
 #include <linux/limits.h>
 #include <math.h>
 
+#endif
+
 #ifndef FILEHANDLER_C
+#define FILEHANDLER_C
 
 // Struct with the path of a directory, a list of the
 // files inside it and their contents
@@ -198,5 +201,4 @@ int targetdir_write(const char *dst, TargetDir* td, char **dict) {
     return 0;
 }
 
-#endif
 #endif

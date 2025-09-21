@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "headers/huffman.h"
 #include "headers/filehandler.h"
+#include "filehandler_concurrent.h"
 #include <locale.h>
 #include <getopt.h>
 
@@ -16,8 +17,8 @@
 //
 // Options: 
 //          -s serial
-//          -p parallel using pthread
-//          -c concurrent using fork
+//          -p parallel using fork
+//          -c concurrent using pthread
 int main(int argc, char** argv){
     //Setup
     setlocale(LC_ALL, "es_ES.UTF-8");
@@ -74,7 +75,7 @@ int main(int argc, char** argv){
     // Program      
     
     // Leer todos los archivos en directorio src (nombre y contenido)
-    TargetDir* td = read_targetdir(src);  
+    TargetDir* td = read_targetdir_concurrent(src);  
     if(td == NULL){
         printf("huff: %s is not a directory.", src);
         return -1;

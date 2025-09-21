@@ -16,8 +16,8 @@
 //
 // Options: 
 //          -s serial
-//          -p parallel using pthread
-//          -c concurrent using fork
+//          -p parallel using fork
+//          -c concurrent using pthread
 int main(int argc, char** argv){
     //Setup
     setlocale(LC_ALL, "es_ES.UTF-8");
