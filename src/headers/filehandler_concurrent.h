@@ -30,11 +30,9 @@ void* read_file(void* arg){
 
     char file_path[PATH_MAX];
     sprintf(file_path, "%s/%s", tdc->td->path, tdc->td->filenames[tdc->index]);
+    size_t filesize = get_filesize(file_path);
+    
     FILE* f = fopen(file_path, "rb");
-    fseek(f, 0, SEEK_END);
-    size_t filesize = ftell(f);
-    fseek(f, 0, SEEK_SET);
-
     unsigned char *content = malloc(sizeof(unsigned char) * filesize);
     fread(content, 1, filesize, f);
     tdc->td->content[tdc->index] = content;

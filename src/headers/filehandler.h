@@ -37,8 +37,14 @@ int isdir(const char* path){
 
 int isfile(const char* path){
     struct stat stat_info;
-    stat(path, &stat_info);
+    stat(path, &stat_info);    
     return S_ISREG(stat_info.st_mode);    
+}
+
+size_t get_filesize(char* path){
+    struct stat stat_info;
+    stat(path, &stat_info);    
+    return stat_info.st_size;
 }
 
 
@@ -79,12 +85,10 @@ TargetDir* read_targetdir(char* path){
 
     for(int i = 0; i<td->n_files; i++){
         char file_path[PATH_MAX];
-        sprintf(file_path, "%s/%s", path, td->filenames[i]);
-        FILE* f = fopen(file_path, "rb");
-        fseek(f, 0, SEEK_END);
-        size_t filesize = ftell(f);
-        fseek(f, 0, SEEK_SET);
-
+        sprintf(file_path, "%s/%s", path, td->filenames[i]);        
+        size_t filesize = get_filesize(file_path);
+        
+        FILE* f = fopen(file_path, "rb");        
         unsigned char *content = malloc(sizeof(unsigned char) * filesize);
         fread(content, 1, filesize, f);
         td->content[i] = content;
