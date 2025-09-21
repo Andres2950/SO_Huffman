@@ -75,7 +75,26 @@ int main(int argc, char** argv){
     // Program      
     
     // Leer todos los archivos en directorio src (nombre y contenido)
-    TargetDir* td = read_targetdir_concurrent(src);  
+    
+    TargetDir* td;
+    
+    switch (execution_mode){
+    case EXEC_MODE_SERIAL:
+        td = read_targetdir(src);
+        break;
+    case EXEC_MODE_CONCURRENT:
+        td = read_targetdir_concurrent(src);
+        break;
+    case EXEC_MODE_PARALLEL:
+        printf("huff: execution mode not supported.");
+        return 0;
+        break;
+    default:
+        printf("huff: execution mode not supported.");
+        return 0;
+        break;
+    }    
+    
     if(td == NULL){
         printf("huff: %s is not a directory.", src);
         return -1;
@@ -112,7 +131,23 @@ int main(int argc, char** argv){
     free(ft);    
     
     // Escribir el archivo comprimido  
-    targetdir_compress(td, dictionary);
+    
+    switch (execution_mode){
+    case EXEC_MODE_SERIAL:
+        targetdir_compress(td, dictionary);
+        break;
+    case EXEC_MODE_CONCURRENT:
+        targetdir_compress_concurrent(td, dictionary);
+        break;
+    case EXEC_MODE_PARALLEL:
+        printf("huff: execution mode not supported.");
+        return 0;
+        break;
+    default:
+        printf("huff: execution mode not supported.");
+        return 0;
+        break;
+    }    
     
     int r = targetdir_write(dst, td, dictionary);
 

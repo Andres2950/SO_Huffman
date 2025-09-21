@@ -22,11 +22,11 @@
 typedef struct {
     TargetDir* td;
     int index;
-} TargetDirConcurrent;
+} read_file_arg;
 
 
 void* read_file(void* arg){
-    TargetDirConcurrent* tdc = arg;
+    read_file_arg* tdc = arg;
 
     char file_path[PATH_MAX];
     sprintf(file_path, "%s/%s", tdc->td->path, tdc->td->filenames[tdc->index]);
@@ -39,8 +39,7 @@ void* read_file(void* arg){
     fread(content, 1, filesize, f);
     tdc->td->content[tdc->index] = content;
     tdc->td->file_sizes[tdc->index] = filesize;
-    fclose(f);
-    printf("%d", tdc->index);
+    fclose(f);    
     free(tdc);
 }
 
@@ -83,7 +82,7 @@ TargetDir* read_targetdir_concurrent(char* path){
     pthread_t* pid = malloc(sizeof(pthread_t) * td->n_files);
 
     for(int i = 0; i<td->n_files; i++){
-        TargetDirConcurrent* tdc = malloc(sizeof(TargetDir));
+        read_file_arg* tdc = malloc(sizeof(read_file_arg));
         tdc->index = i;
         tdc->td = td;
 
@@ -98,5 +97,44 @@ TargetDir* read_targetdir_concurrent(char* path){
     return td;
 }
 
+
+typedef struct{
+    TargetDir* td;
+    char** dict;
+    int index;
+} compress_file_arg;
+
+void* compress_file(void* arg){
+    compress_file_arg* cfa = arg;    
+    int i = cfa->index;
+    char* binary = huffman_translate(cfa->td->content[i], cfa->td->file_sizes[i], cfa->dict);
+    cfa->td->b_content[i] = binary;
+    cfa->td->b_content_sizes[i] = strlen(binary);
+    free(cfa);
+}
+
+
+// Traduce el contenido de cada archivo de TargetDir usando el diccionario
+// La representacion codificada se guarda como un string en b_content
+int targetdir_compress_concurrent(TargetDir* td, char **dict){
+    td->b_content = malloc(sizeof(char*) * td->n_files);
+    td->b_content_sizes = malloc(sizeof(size_t) * td->n_files);
+
+    pthread_t* pid = malloc(sizeof(pthread_t) * td->n_files);
+
+    for(int i = 0; i<td->n_files; i++){
+        compress_file_arg* cfa = malloc(sizeof(compress_file_arg));
+        cfa->index = i;
+        cfa->td = td;
+        cfa->dict = dict;
+
+        pthread_create(&pid[i], NULL, compress_file, (void*) cfa);
+    }
+    
+    for(int i = 0; i<td->n_files; i++){
+       pthread_join(pid[i], NULL);
+    }    
+    free(pid);    
+}
 
 #endif
