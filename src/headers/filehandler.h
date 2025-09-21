@@ -122,10 +122,10 @@ int targetdir_compress(TargetDir* td, char **dict){
         char bit;
         
         // por cada caracter
-        for(int j=0; j<td->file_sizes[i]; j++){
+        for(size_t j=0; j<td->file_sizes[i]; j++){
             int caracter = td->content[i][j];
             //por cada bit de codigo
-            for(int k=0; k<strlen(dict[caracter]); k++){
+            for(size_t k=0; k<strlen(dict[caracter]); k++){
                 char bitchar = dict[caracter][k];
                 //Insertar el bit
                 if(bitchar=='0'){   
@@ -190,8 +190,7 @@ int targetdir_write(const char *dst, TargetDir* td, char **dict) {
     }
     fwrite(&size_dict, sizeof(int), 1, file);
 
-    // Escribir entradas del diccionario
-    int n_cod;
+    // Escribir entradas del diccionario    
     for (int i = 0; i < MAX_BYTE; i++){
         if(dict[i] && dict[i][0] != '\0'){                        
             unsigned char c = i;

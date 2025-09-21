@@ -39,6 +39,8 @@ void* read_file(void* arg){
     tdc->td->file_sizes[tdc->index] = filesize;
     fclose(f);    
     free(tdc);
+
+    return NULL;
 }
 
 
@@ -118,10 +120,10 @@ void* compress_file(void* arg){
     char bit;
     
     // por cada caracter
-    for(int j=0; j<cfa->td->file_sizes[i]; j++){
+    for(size_t j=0; j<cfa->td->file_sizes[i]; j++){
         int caracter = cfa->td->content[i][j];
         //por cada bit de codigo
-        for(int k=0; k<strlen(cfa->dict[caracter]); k++){
+        for(size_t k=0; k<strlen(cfa->dict[caracter]); k++){
             char bitchar = cfa->dict[caracter][k];
             //Insertar el bit
             if(bitchar=='0'){   
@@ -158,6 +160,8 @@ void* compress_file(void* arg){
     cfa->td->b_content[i] = binary;
     cfa->td->b_content_sizes[i] = total_bit_size; 
     free(cfa);
+
+    return NULL;
 }
 
 // Traduce el contenido de cada archivo de TargetDir usando el diccionario
