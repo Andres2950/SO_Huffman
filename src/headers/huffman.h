@@ -21,6 +21,14 @@ typedef struct {
   int size;
 } LinkedList;
 
+typedef struct {
+    Node *tree;
+    char *filename; // archivo de salida 
+    char *src;      // archivo de contenido
+    long int offset; // donde va a empezar a leer el archivo
+    int total_bits;
+} huffman_args;
+
 ////////////////////////////////// -------------------------------
 int* new_frequency_table();
 void frequency_table_add_text(int *ft, unsigned char *text, size_t size);
@@ -35,6 +43,7 @@ void huffman_dictionary_print(char **dict);
 void huffman_binary_tree_print(Node *root, int depth);
 Node* rebuild_huffman_tree(char **dict);
 void huffman_decompress_bits(Node *tree, FILE *input, int n_bytes, char *filename);
+void *huffman_decompress_bits_void(void *args);
 // ----------------------------------------------------
 #ifndef HUFFMAN_C
 
@@ -99,8 +108,44 @@ Node* rebuild_huffman_tree(char **dict){
   return root;
 }
 
+// No nos sirve pasar por parametro el mismo puntero a FILE 
+// Seia desatstroso pq cualdo se hace fread mueve el puintero al sigueinte char a leer 
+void *huffman_decompress_bits_void(void* arg){
+    huffman_args *xd = (huffman_args *) arg;
+    FILE *input = fopen(xd->src, "rb");
+    fseek(input, xd->offset, SEEK_SET); // saltamos al lugar que queremos leer
+    FILE *out = fopen(xd->filename, "wb");
+    Node *tree = xd->tree;
+    int total_bits = xd->total_bits;
+
+    Node *current = tree;
+    int bits_read = 0;
+    unsigned char byte;
+
+    while(bits_read < total_bits && fread(&byte, 1, 1, input) == 1){
+        for(int b = 7; b >= 0 && bits_read < total_bits; --b){
+        int bit = (byte >> b) & 1;
+        if(bit == 0) 
+            current = current->left;
+        else
+            current = current->right;
+        if(current->left == 0 && current->right == 0){
+            fputc(current->ch, out);
+            current = tree;
+        }
+        bits_read++;
+        }
+    }
+    fclose(out);
+    fclose(input);
+    
+    free(xd->filename);
+    free(xd);
+    return NULL; 
+}
 
 void huffman_decompress_bits(Node *tree, FILE *input, int total_bits, char *filename){
+
   FILE *out = fopen(filename, "wb");
   Node *current = tree;
   int bits_read = 0;
