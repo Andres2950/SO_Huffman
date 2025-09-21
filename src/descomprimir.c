@@ -1,10 +1,12 @@
-
+#include <linux/limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "headers/huffman.h"
 #include "headers/filehandler.h"
 #include <locale.h>
 #include <getopt.h>
+#include <pthread.h>
+#include <string.h>
 
 #define EXEC_MODE_SERIAL 0
 #define EXEC_MODE_PARALLEL 1
@@ -18,6 +20,66 @@
 //          -s serial
 //          -p parallel using fork
 //          -c concurrent using pthread
+void serial_handler(FILE *f, char *dst, Node *huffman_tree) {
+    char filename[PATH_MAX];
+    int total_bits;
+    while(fscanf(f, "%1023[^\t]\t", filename) == 1){
+        if(fscanf(f, "%d\t", &total_bits) != 1) break;
+        
+        //Obtener nombres del archivo
+        char path[PATH_MAX];
+        strcpy(path, dst);
+        strcat(path, "/");
+        strcat(path, filename);        
+
+        //Obtener el contenido del file
+        huffman_decompress_bits(huffman_tree, f, total_bits, path);
+        fgetc(f); //Consule \n
+    }
+}
+
+void concurrent_handler(FILE *f, char *dst, Node *huffman_tree, char *src_path){
+    char filename[PATH_MAX];
+    int total_bits;
+    int pt_index = 0;
+    int size = 128;
+    pthread_t *threads = malloc(sizeof(pthread_t)*size);
+    huffman_args* args;
+    
+    while(fscanf(f, "%1023[^\t]\t", filename) == 1){
+        if(fscanf(f, "%d\t", &total_bits) != 1) break;
+        
+        //Obtener nombres del archivo
+        char path[PATH_MAX];
+        strcpy(path, dst);
+        strcat(path, "/");
+        strcat(path, filename);        
+
+        //Obtener el contenido del file
+        args = malloc(sizeof(huffman_args));
+        args->tree = huffman_tree;
+        args->filename = strdup(path);
+        args->src = src_path;
+        args->offset = ftell(f);
+        args->total_bits = total_bits;
+        // Le pasamos la kk a un hilo
+        pthread_create(&(threads[pt_index]), NULL, (void *)huffman_decompress_bits_void, (void *)args);
+
+        pt_index++;
+        if (pt_index >= size){
+            size *= 2;
+            threads = realloc(threads, sizeof(pthread_t)*size);
+        }
+        // para saltarnos el bloque y el \n
+        int total_bytes = (total_bits + 7)/8;
+        fseek(f, total_bytes+1, SEEK_CUR);
+    }
+    // cerramos todos los pthreads
+    for (int i = 0; i < pt_index; ++i) {
+        pthread_join(threads[i], NULL);
+    }
+}
+
 int main(int argc, char** argv){
     //Setup
     setlocale(LC_ALL, "es_ES.UTF-8");
@@ -72,9 +134,9 @@ int main(int argc, char** argv){
 
     
     
+    // Esto creo que se puede dejar serial 
+    // No tiene sentido si se obtiene el diccionario y arbol con multyiples hilos
     // Program   
-
-    
     FILE *f = fopen(src, "rb");
     if(!f) return -1;
     
@@ -107,20 +169,26 @@ int main(int argc, char** argv){
         mkdir(dst, 0700);
     }
 
+    // Una vez se tiene el arbol, empezamos los  y concurrent
     // Descomprimir y escribir archivos
-    char filename[PATH_MAX];
-    int total_bits;
-    while(fscanf(f, "%1023[^\t]\t", filename) == 1){
-        if(fscanf(f, "%d\t", &total_bits) != 1) break;
-        
-        char path[PATH_MAX];
-        strcpy(path, dst);
-        strcat(path, "/");
-        strcat(path, filename);        
-
-        huffman_decompress_bits(huffman_tree, f, total_bits, path);
-        fgetc(f);
+    switch (execution_mode) {
+        case EXEC_MODE_SERIAL:
+            serial_handler(f, dst, huffman_tree);
+            break;
+        case EXEC_MODE_CONCURRENT:
+            concurrent_handler(f, dst, huffman_tree, src);
+            break;
+        case EXEC_MODE_PARALLEL:
+            printf("PArealel execvution mode not implemented");
+            fclose(f);
+            return -1;
+            break;
+        default:
+            printf("Decompresion mode not found");
+            fclose(f);
+            return -1;
     }
+   
     fclose(f);
 
     printf("dehuff: decompressed successfully \n");
