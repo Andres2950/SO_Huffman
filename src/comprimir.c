@@ -140,8 +140,7 @@ int main(int argc, char** argv){
         targetdir_compress_concurrent(td, dictionary);        
         break;
     case EXEC_MODE_PARALLEL:
-        printf("huff: execution mode not supported.\n");
-        return 0;
+        targetdir_compress_parallel(td, dictionary);
         break;
     default:
         printf("huff: execution mode not supported.\n");

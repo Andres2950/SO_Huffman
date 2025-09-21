@@ -54,9 +54,7 @@ TargetDir* read_targetdir_parallel(char* path){
     }
     
     closedir(d);
-    //Leer el contenido de los archivos
-    //td->content = malloc(sizeof(unsigned char*) * td->n_files);
-    //td->file_sizes = malloc(sizeof(size_t) * td->n_files);
+    //Leer el contenido de los archivos    
     td->content = mmap(NULL, sizeof(unsigned char*) * td->n_files, MMAP_PROT, MMAP_FLAG, -1, 0);
     td->file_sizes = mmap(NULL, sizeof(size_t) * td->n_files, MMAP_PROT, MMAP_FLAG, -1, 0);
     
@@ -67,8 +65,7 @@ TargetDir* read_targetdir_parallel(char* path){
         size_t filesize = get_filesize(file_path);
         unsigned char *content = mmap(NULL, sizeof(unsigned char) * filesize, MMAP_PROT, MMAP_FLAG, -1, 0);
         
-        int pid = fork();
-        printf("%d\n", pid);
+        int pid = fork();        
         if(pid) continue;                
         //Ejecucion de hijo        
         
@@ -86,6 +83,79 @@ TargetDir* read_targetdir_parallel(char* path){
     return td;
 }
 
+int targetdir_compress_parallel(TargetDir* td, char **dict){
+    char cero = 0;
+    char uno = 1;
+
+    td->b_content = mmap(NULL, sizeof(char*) * td->n_files, MMAP_PROT, MMAP_FLAG, -1, 0);
+    td->b_content_sizes = mmap(NULL, sizeof(size_t) * td->n_files, MMAP_PROT, MMAP_FLAG, -1, 0);    
+
+    //No sabemos el tamaño final de b_content pero 
+    //podemos estar seguros que b_content va a ser menor que filesize.
+    for(int i=0; i < td->n_files; i++){           
+        td->b_content[i] = mmap(NULL, td->file_sizes[i], MMAP_PROT, MMAP_FLAG, -1, 0); 
+    }
+
+    // por cada archivo
+    for(int i=0; i < td->n_files; i++){                           
+        int pid = fork();
+        if(pid) continue;
+        // Ejecucion de hijo
+
+        char byte = 0;
+        int byte_counter=0;
+        int bit_counter =0;
+        size_t total_bit_size = 0;
+        char bit;
+        
+        // por cada caracter
+        for(int j=0; j<td->file_sizes[i]; j++){
+            int caracter = td->content[i][j];
+            //por cada bit de codigo
+            for(int k=0; k<strlen(dict[caracter]); k++){
+                char bitchar = dict[caracter][k];
+                //Insertar el bit
+                if(bitchar=='0'){   
+                    bit = cero;            
+                }else if(bitchar=='1'){
+                    bit = uno;
+                }else{
+                    return -1; //str invalido
+                }
+                byte = byte << 1;
+                byte = byte | bit;
+                bit_counter++;
+
+                //Escribe el byte si ya esta lleno
+                if(bit_counter==8){
+                    td->b_content[i][byte_counter] = byte;
+                    bit_counter=0;
+                    byte_counter++;
+                }              
+                total_bit_size++;  
+            }   
+            //Escribe el byte si es el ultimo
+            if(j==td->file_sizes[i]-1 && bit_counter!=0){
+                //Rellenar con ceros
+                while(bit_counter!=8){
+                    byte = byte << 1;
+                    bit_counter++;
+                }
+                td->b_content[i][byte_counter] = byte;
+                byte_counter++;
+            }
+        }
+                
+        td->b_content_sizes[i] = total_bit_size;    
+        exit(0);        
+    }
+
+    for(int i = 0; i<td->n_files; i++){
+        wait(NULL);
+    }   
+    
+    return 0;
+}
 
 
 

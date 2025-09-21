@@ -87,7 +87,7 @@ TargetDir* read_targetdir(char* path){
         char file_path[PATH_MAX];
         sprintf(file_path, "%s/%s", path, td->filenames[i]);        
         size_t filesize = get_filesize(file_path);
-        
+
         FILE* f = fopen(file_path, "rb");        
         unsigned char *content = malloc(sizeof(unsigned char) * filesize);
         fread(content, 1, filesize, f);
@@ -174,7 +174,7 @@ int targetdir_compress(TargetDir* td, char **dict){
 // Formato del diccionario: cantidad de entradas(int 4b) | [entrada ...]
 // Formato de entrada: caracter(uchar 1b) | tamaño de codigo(int 4b) | codigo(char tamaño*bytes)
 //
-// Formato del archivo comprimido: filename(string) \t contentsize(size_t) \t codigo (contensize*bytes)
+// Formato del archivo comprimido: filename(string) \t contentsize en bits(size_t) \t codigo (contensize*bits)
 //       
 int targetdir_write(const char *dst, TargetDir* td, char **dict) {
     FILE *file = fopen(dst, "wb"); //wb escribe en binario (linux y sistemas posix ignoran el b)
@@ -208,7 +208,7 @@ int targetdir_write(const char *dst, TargetDir* td, char **dict) {
         // filename
         fprintf(file, "%s\t", td->filenames[i]);
         // content_size
-        fprintf(file, "%zu\t", td->b_content_sizes[i]);
+        fprintf(file, "%zu\t", td->b_content_sizes[i]);        
         // Codigo en binario
         size_t byte_size = td->b_content_sizes[i]/8;
         if(td->b_content_sizes[i]%8 > 0)byte_size++;

@@ -37,8 +37,8 @@ build/dehuff: ./src/descomprimir.c $(SRC_HEADERS)
 # 	@echo -e "$(YELLOW) ###### RUNNING ###### $(RESET)"
 # 	@$(BIN_MAIN)
 
-# clean:
-# 	@echo -e "$(YELLOW) --- CLEANING --- $(RESET)"
-# 	@rm -rf $(OUT_DIR)
+clean:
+	@echo -e "$(YELLOW) --- CLEANING --- $(RESET)"
+	@rm -rf $(OUT_DIR)
 
 #-include $(BIN:=.d)
