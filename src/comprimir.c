@@ -4,6 +4,7 @@
 #include "headers/huffman.h"
 #include "headers/filehandler.h"
 #include "filehandler_concurrent.h"
+#include "filehandler_parallel.h"
 #include <locale.h>
 #include <getopt.h>
 
@@ -86,21 +87,22 @@ int main(int argc, char** argv){
         td = read_targetdir_concurrent(src);
         break;
     case EXEC_MODE_PARALLEL:
-        printf("huff: execution mode not supported.");
-        return 0;
+        td = read_targetdir_parallel(src);        
         break;
     default:
-        printf("huff: execution mode not supported.");
+        printf("huff: execution mode not supported.\n");
         return 0;
         break;
     }    
     
+    printf("am I?\n");
+
     if(td == NULL){
-        printf("huff: %s is not a directory.", src);
+        printf("huff: %s is not a directory.\n", src);
         return -1;
     }
     if(td->n_files == 0){        
-        printf("huff: %s is empty.", src);
+        printf("huff: %s is empty.\n", src);
         return -1;
     }
 
@@ -140,11 +142,11 @@ int main(int argc, char** argv){
         targetdir_compress_concurrent(td, dictionary);
         break;
     case EXEC_MODE_PARALLEL:
-        printf("huff: execution mode not supported.");
+        printf("huff: execution mode not supported.\n");
         return 0;
         break;
     default:
-        printf("huff: execution mode not supported.");
+        printf("huff: execution mode not supported.\n");
         return 0;
         break;
     }    
@@ -152,7 +154,7 @@ int main(int argc, char** argv){
     int r = targetdir_write(dst, td, dictionary);
 
     if(r){
-        printf("huff: error occurred while opening or creating %s.", dst);
+        printf("huff: error occurred while opening or creating %s.\n", dst);
     }
     
     printf("huff: compressed successfully \n");
