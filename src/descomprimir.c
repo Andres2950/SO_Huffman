@@ -28,7 +28,7 @@ double getDiffTimeMilis(struct timespec start, struct timespec end);
 void serial_handler(FILE *f, char *dst, Node *huffman_tree) {
     char filename[PATH_MAX];
     int total_bits;
-    while(fscanf(f, "%1023[^\t]\t", filename) == 1){
+    while(fscanf(f, "%4096[^\t]\t", filename) == 1){
         if(fscanf(f, "%d\t", &total_bits) != 1) break;
         
         //Obtener nombres del archivo
@@ -51,7 +51,7 @@ void concurrent_handler(FILE *f, char *dst, Node *huffman_tree, char *src_path){
     pthread_t *threads = malloc(sizeof(pthread_t)*size);
     huffman_args* args;
     
-    while(fscanf(f, "%1023[^\t]\t", filename) == 1){
+    while(fscanf(f, "%4096[^\t]\t", filename) == 1){
         if(fscanf(f, "%d\t", &total_bits) != 1) break;
         
         //Obtener nombres del archivo
