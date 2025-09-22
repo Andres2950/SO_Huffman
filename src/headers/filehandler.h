@@ -112,11 +112,12 @@ int targetdir_compress(TargetDir* td, char **dict){
 
     // por cada archivo
     for(int i=0; i < td->n_files; i++){           
-        //The binary size will not be more than the uncompressed size     
-        char* binary = malloc(td->file_sizes[i]); 
+        //The binary size rarely is more than the uncompressed size. BUUUT IT THE POSSIBILITY IS NOT ZERO.  
+        int array_size_factor = 1;
+        char* binary = malloc(td->file_sizes[i]*array_size_factor); 
 
         char byte = 0;
-        int byte_counter=0;
+        size_t byte_counter=0;
         int bit_counter =0;
         size_t total_bit_size = 0;
         char bit;
@@ -146,6 +147,11 @@ int targetdir_compress(TargetDir* td, char **dict){
                     byte_counter++;
                 }              
                 total_bit_size++;  
+                //overflow control
+                if(byte_counter == td->file_sizes[i]*array_size_factor -2){
+                    array_size_factor++;
+                    binary = realloc(binary, td->file_sizes[i]*array_size_factor); 
+                }
             }   
             //Escribe el byte si es el ultimo
             if(j==td->file_sizes[i]-1 && bit_counter!=0){

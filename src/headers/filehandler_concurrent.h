@@ -110,11 +110,12 @@ void* compress_file(void* arg){
     int i = cfa->index;
     char cero = 0;
     char uno = 1;
-    //The binary size will not be more than the uncompressed size     
-    char* binary = malloc(cfa->td->file_sizes[i]); 
+    //The binary size rarely is more than the uncompressed size. BUUUT IT THE POSSIBILITY IS NOT ZERO.  
+    int array_size_factor = 1;
+    char* binary = malloc(cfa->td->file_sizes[i]*array_size_factor); 
 
     char byte = 0;
-    int byte_counter=0;
+    size_t byte_counter=0;
     int bit_counter =0;
     size_t total_bit_size = 0;
     char bit;
@@ -144,6 +145,11 @@ void* compress_file(void* arg){
                 byte_counter++;
             }              
             total_bit_size++;  
+            //overflow control
+            if(byte_counter == cfa->td->file_sizes[i]*array_size_factor -2){
+                array_size_factor++;
+                binary = realloc(binary, cfa->td->file_sizes[i]*array_size_factor); 
+            }
         }   
         //Escribe el byte si es el ultimo
         if(j==cfa->td->file_sizes[i]-1 && bit_counter!=0){

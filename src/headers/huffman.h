@@ -26,7 +26,7 @@ typedef struct {
     char *filename; // archivo de salida 
     char *src;      // archivo de contenido
     long int offset; // donde va a empezar a leer el archivo
-    int total_bits;
+    size_t total_bits;
 } huffman_args;
 
 ////////////////////////////////// -------------------------------
@@ -42,7 +42,7 @@ char** huffman_create_dictionary(Node *tree);
 void huffman_dictionary_print(char **dict);
 void huffman_binary_tree_print(Node *root, int depth);
 Node* rebuild_huffman_tree(char **dict);
-void huffman_decompress_bits(Node *tree, FILE *input, int n_bytes, char *filename);
+void huffman_decompress_bits(Node *tree, FILE *input, size_t total_bits, char *filename);
 void *huffman_decompress_bits_void(void *args);
 // ----------------------------------------------------
 #ifndef HUFFMAN_C
@@ -116,10 +116,10 @@ void *huffman_decompress_bits_void(void* arg){
     fseek(input, xd->offset, SEEK_SET); // saltamos al lugar que queremos leer
     FILE *out = fopen(xd->filename, "wb");
     Node *tree = xd->tree;
-    int total_bits = xd->total_bits;
+    size_t total_bits = xd->total_bits;
 
     Node *current = tree;
-    int bits_read = 0;
+    size_t bits_read = 0;
     unsigned char byte;
 
     while(bits_read < total_bits && fread(&byte, 1, 1, input) == 1){
@@ -144,11 +144,11 @@ void *huffman_decompress_bits_void(void* arg){
     return NULL; 
 }
 
-void huffman_decompress_bits(Node *tree, FILE *input, int total_bits, char *filename){
+void huffman_decompress_bits(Node *tree, FILE *input, size_t total_bits, char *filename){
 
   FILE *out = fopen(filename, "wb");
   Node *current = tree;
-  int bits_read = 0;
+  size_t bits_read = 0;
   unsigned char byte;
 
   while(bits_read < total_bits && fread(&byte, 1, 1, input) == 1){
@@ -163,8 +163,8 @@ void huffman_decompress_bits(Node *tree, FILE *input, int total_bits, char *file
         current = tree;
       }
       bits_read++;
-    }
-  }
+    }    
+  }  
   fclose(out);
 }
 
