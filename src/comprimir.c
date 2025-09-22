@@ -18,11 +18,14 @@
 //
 // Options:
 //      Execution Mode:
-//          -s serial
-//          -p parallel using fork
-//          -c concurrent using pthread
+//          -s                  serial
+//          -p[MEM_USE_FACTOR]  parallel using fork
+//          -c                  concurrent using pthread
 //      Benchmark:
 //          -b benchmark
+//
+// MEM_USE_FACTOR is the coeficient used to determine the memory allocated while runing the program.
+// MEM_FACTOR is set to 2 per default. Files with unbalanced frequencies might need a higher coeficient.
 
 double getDiffTimeMilis(struct timespec start, struct timespec end);
 
@@ -41,7 +44,7 @@ int main(int argc, char** argv){
     //opterr = 0;
     int c;    
     
-    while((c = getopt(argc, argv, "spcb")) != -1){
+    while((c = getopt(argc, argv, "scbp::")) != -1){
         switch (c){
         case 's':
             execution_mode = EXEC_MODE_SERIAL;
@@ -49,6 +52,14 @@ int main(int argc, char** argv){
 
         case 'p':
             execution_mode = EXEC_MODE_PARALLEL;
+            if(optarg!=NULL){
+                int i = atoi(optarg);
+                if(i<0){
+                    printf("huff: MEM_USE_FACTOR must be a positive integer");
+                    return 0;
+                }
+                MEM_USE_FACTOR = i;
+            }            
             break;
 
         case 'c':
@@ -157,7 +168,10 @@ int main(int argc, char** argv){
         targetdir_compress_concurrent(td, dictionary);        
         break;
     case EXEC_MODE_PARALLEL:
-        targetdir_compress_parallel(td, dictionary);
+        if(targetdir_compress_parallel(td, dictionary)){
+            printf("huff: compression error. Try incrementing the MEM_USE_FACTOR or using another execution mode.\n");
+            return -1;
+        }
         break;
     default:
         printf("huff: execution mode not supported.\n");

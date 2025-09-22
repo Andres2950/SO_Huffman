@@ -23,6 +23,7 @@
 #define MMAP_PROT PROT_WRITE | PROT_READ
 #define MMAP_FLAG MAP_ANONYMOUS | MAP_SHARED
 
+int MEM_USE_FACTOR = 2;
 
 TargetDir* read_targetdir_parallel(char* path){    
     // Confirmar que path es un directorio    
@@ -90,10 +91,11 @@ int targetdir_compress_parallel(TargetDir* td, char **dict){
     td->b_content = mmap(NULL, sizeof(char*) * td->n_files, MMAP_PROT, MMAP_FLAG, -1, 0);
     td->b_content_sizes = mmap(NULL, sizeof(size_t) * td->n_files, MMAP_PROT, MMAP_FLAG, -1, 0);    
 
-    //No sabemos el tamaño final de b_content pero 
-    //podemos estar seguros que b_content va a ser menor que filesize.
+    //No sabemos el tamaño final de b_content y no podemos estar seguros que será menor que el
+    //tamaño del archivo sin comprimir.
+    //El modo paralelo lanza un error si hay overflow.
     for(int i=0; i < td->n_files; i++){           
-        td->b_content[i] = mmap(NULL, td->file_sizes[i], MMAP_PROT, MMAP_FLAG, -1, 0); 
+        td->b_content[i] = mmap(NULL, td->file_sizes[i]*MEM_USE_FACTOR, MMAP_PROT, MMAP_FLAG, -1, 0); 
     }
 
     // por cada archivo
@@ -103,7 +105,7 @@ int targetdir_compress_parallel(TargetDir* td, char **dict){
         // Ejecucion de hijo
 
         char byte = 0;
-        int byte_counter=0;
+        size_t byte_counter=0;
         int bit_counter =0;
         size_t total_bit_size = 0;
         char bit;
@@ -133,6 +135,10 @@ int targetdir_compress_parallel(TargetDir* td, char **dict){
                     byte_counter++;
                 }              
                 total_bit_size++;  
+                //overflow control
+                if(byte_counter == td->file_sizes[i]*MEM_USE_FACTOR -2){
+                    exit(-1);
+                }
             }   
             //Escribe el byte si es el ultimo
             if(j==td->file_sizes[i]-1 && bit_counter!=0){
@@ -150,11 +156,16 @@ int targetdir_compress_parallel(TargetDir* td, char **dict){
         exit(0);        
     }
 
+    int r = 0;
     for(int i = 0; i<td->n_files; i++){
-        wait(NULL);
+        int status;
+        wait(&status);
+        if(status){
+            r=-1;
+        }
     }   
     
-    return 0;
+    return r;
 }
 
 
