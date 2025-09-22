@@ -144,6 +144,32 @@ void *huffman_decompress_bits_void(void* arg){
     return NULL; 
 }
 
+void huffman_decompress_bits_by_pos(Node *tree, char *file_input, size_t total_bits, char *file_out, long offset){
+  FILE *input = fopen(file_input, "rb");
+  fseek(input, offset, SEEK_SET);
+
+  FILE *out = fopen(file_out, "wb");
+  Node *current = tree;
+  size_t bits_read = 0;
+  unsigned char byte;
+
+  while(bits_read < total_bits && fread(&byte, 1, 1, input) == 1){
+    for(int b = 7; b >= 0 && bits_read < total_bits; --b){
+      int bit = (byte >> b) & 1;
+      if(bit == 0) 
+        current = current->left;
+      else
+        current = current->right;
+      if(current->left == 0 && current->right == 0){
+        fputc(current->ch, out);
+        current = tree;
+      }
+      bits_read++;
+    }    
+  }  
+  fclose(out);
+}
+
 void huffman_decompress_bits(Node *tree, FILE *input, size_t total_bits, char *filename){
 
   FILE *out = fopen(filename, "wb");

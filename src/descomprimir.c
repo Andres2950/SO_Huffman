@@ -7,6 +7,7 @@
 #include <getopt.h>
 #include <pthread.h>
 #include <string.h>
+#include <unistd.h>
 
 #define EXEC_MODE_SERIAL 0
 #define EXEC_MODE_PARALLEL 1
@@ -41,6 +42,28 @@ void serial_handler(FILE *f, char *dst, Node *huffman_tree) {
         huffman_decompress_bits(huffman_tree, f, total_bits, path);        
         fgetc(f); //Consule \n        
     }
+}
+
+void parallel_handler(FILE *f, char *dst, Node *huffman_tree, char *src_path){
+  char filename[PATH_MAX];
+  size_t total_bits;
+  
+  while(fscanf(f, "%4096[^\t]\t", filename) == 1){
+    if(fscanf(f, "%zu\t", &total_bits) != 1) break;
+    char path[PATH_MAX];
+    strcpy(path, dst);
+    strcat(path, "/");
+    strcat(path, filename);
+    
+    int pid = fork();
+    if(!pid){
+      huffman_decompress_bits_by_pos(huffman_tree, src_path, total_bits, strdup(path), ftell(f));
+      exit(0);
+    } else {
+      int total_bytes = (total_bits + 7)/8;
+      fseek(f, total_bytes+1, SEEK_CUR);
+    }
+  }
 }
 
 void concurrent_handler(FILE *f, char *dst, Node *huffman_tree, char *src_path){
