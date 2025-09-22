@@ -20,6 +20,11 @@
 //          -s serial
 //          -p parallel using fork
 //          -c concurrent using pthread
+//      Benchmark:
+//          -b benchmark
+
+double getDiffTimeMilis(struct timespec start, struct timespec end);
+
 void serial_handler(FILE *f, char *dst, Node *huffman_tree) {
     char filename[PATH_MAX];
     int total_bits;
@@ -87,12 +92,15 @@ int main(int argc, char** argv){
     char* src;
     char* dst;
     int execution_mode = EXEC_MODE_SERIAL; //Default
+    int benchmark = 0; //default
+    struct timespec start;
+    struct timespec end;
 
     //Input
     //opterr = 0;
     int c;    
     
-    while((c = getopt(argc, argv, "spc")) != -1){
+    while((c = getopt(argc, argv, "spcb")) != -1){
         switch (c){
         case 's':
             execution_mode = EXEC_MODE_SERIAL;
@@ -105,7 +113,11 @@ int main(int argc, char** argv){
         case 'c':
             execution_mode = EXEC_MODE_CONCURRENT;
             break;
-        
+
+        case 'b':
+            benchmark = 1;
+            break; 
+            
         case '?':
             return 1;
             break;
@@ -137,6 +149,10 @@ int main(int argc, char** argv){
     // Esto creo que se puede dejar serial 
     // No tiene sentido si se obtiene el diccionario y arbol con multyiples hilos
     // Program   
+    if(benchmark){
+        timespec_get(&start, TIME_UTC);
+    }
+
     FILE *f = fopen(src, "rb");
     if(!f) return -1;
     
@@ -192,5 +208,20 @@ int main(int argc, char** argv){
     fclose(f);
 
     printf("dehuff: decompressed successfully \n");
-    return 0;
+    
+    if(benchmark){
+        timespec_get(&end, TIME_UTC);
+        double bench = getDiffTimeMilis(start, end);
+        printf("dehuff: benchmark results \n\t execution time:\t%.0fms\n", bench);
+    }
+    return 0;  
+}
+
+
+
+double getDiffTimeMilis(struct timespec start, struct timespec end){
+    double end_t = (double) end.tv_sec + (double)(end.tv_nsec) / 1000000000 ;
+    double start_t = (double) start.tv_sec + (double)(start.tv_nsec) / 1000000000 ;
+    double diff = end_t - start_t;
+    return diff*1000;
 }

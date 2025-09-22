@@ -6,6 +6,7 @@
 #include "filehandler_parallel.h"
 #include <locale.h>
 #include <getopt.h>
+#include <time.h>
 
 #define EXEC_MODE_SERIAL 0
 #define EXEC_MODE_PARALLEL 1
@@ -15,10 +16,16 @@
 // Compress src directory into dst file.
 // Only handles plaintext files.
 //
-// Options: 
+// Options:
+//      Execution Mode:
 //          -s serial
 //          -p parallel using fork
 //          -c concurrent using pthread
+//      Benchmark:
+//          -b benchmark
+
+double getDiffTimeMilis(struct timespec start, struct timespec end);
+
 int main(int argc, char** argv){
     //Setup
     setlocale(LC_ALL, "es_ES.UTF-8");
@@ -26,12 +33,15 @@ int main(int argc, char** argv){
     char* src;
     char* dst;
     int execution_mode = EXEC_MODE_SERIAL; //Default
+    int benchmark = 0; //default
+    struct timespec start;
+    struct timespec end;
 
     //Input
     //opterr = 0;
     int c;    
     
-    while((c = getopt(argc, argv, "spc")) != -1){
+    while((c = getopt(argc, argv, "spcb")) != -1){
         switch (c){
         case 's':
             execution_mode = EXEC_MODE_SERIAL;
@@ -44,7 +54,11 @@ int main(int argc, char** argv){
         case 'c':
             execution_mode = EXEC_MODE_CONCURRENT;
             break;
-        
+
+        case 'b':
+            benchmark = 1;
+            break;        
+
         case '?':
             return 1;
             break;
@@ -72,8 +86,11 @@ int main(int argc, char** argv){
     dst = argv[optind+1];    
     
     
-    // Program      
-    
+    // Program          
+    if(benchmark){
+        timespec_get(&start, TIME_UTC);
+    }
+
     // Leer todos los archivos en directorio src (nombre y contenido)
     
     TargetDir* td;
@@ -149,11 +166,26 @@ int main(int argc, char** argv){
     }    
     
     int r = targetdir_write(dst, td, dictionary);
-
+    
     if(r){
         printf("huff: error occurred while opening or creating %s.\n", dst);
     }
     
     printf("huff: compressed successfully \n");
+
+    if(benchmark){
+        timespec_get(&end, TIME_UTC);
+        double bench = getDiffTimeMilis(start, end);
+        printf("huff: benchmark results \n\t execution time:\t%.0fms\n", bench);
+    }
     return 0;  
+}
+
+
+
+double getDiffTimeMilis(struct timespec start, struct timespec end){
+    double end_t = (double) end.tv_sec + (double)(end.tv_nsec) / 1000000000 ;
+    double start_t = (double) start.tv_sec + (double)(start.tv_nsec) / 1000000000 ;
+    double diff = end_t - start_t;
+    return diff*1000;
 }
