@@ -218,9 +218,7 @@ int main(int argc, char** argv){
             concurrent_handler(f, dst, huffman_tree, src);
             break;
         case EXEC_MODE_PARALLEL:
-            printf("PArealel execvution mode not implemented");
-            fclose(f);
-            return -1;
+            parallel_handler(f, dst, huffman_tree, src);
             break;
         default:
             printf("Decompresion mode not found");
