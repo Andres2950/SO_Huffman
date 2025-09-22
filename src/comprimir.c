@@ -12,20 +12,21 @@
 #define EXEC_MODE_PARALLEL 1
 #define EXEC_MODE_CONCURRENT 2
 
-// Usage: huff [options] src dst
-// Compress src directory into dst file.
-// Only handles plaintext files.
-//
-// Options:
-//      Execution Mode:
-//          -s                  serial
-//          -p[MEM_USE_FACTOR]  parallel using fork
-//          -c                  concurrent using pthread
-//      Benchmark:
-//          -b benchmark
-//
-// MEM_USE_FACTOR is the coeficient used to determine the memory allocated while runing the program.
-// MEM_FACTOR is set to 2 per default. Files with unbalanced frequencies might need a higher coeficient.
+const char* help = "\n"
+"Usage: huff [options] src dst\n"
+"Compress src directory into dst file.\n"
+"Only handles plaintext files.\n"
+"\n"
+"Options:\n"
+"     Execution Mode:\n"
+"         -s                  serial\n"
+"         -p[MEM_USE_FACTOR]  parallel using fork\n"
+"         -c                  concurrent using pthread\n"
+"     Benchmark:\n"
+"         -b\n"
+"\n"
+"MEM_USE_FACTOR is the coeficient used to determine the memory allocated while runing the program.\n"
+"MEM_USE_FACTOR is set to 2 per default. Files with unbalanced frequencies might need a higher coeficient.\n";
 
 double getDiffTimeMilis(struct timespec start, struct timespec end);
 
@@ -44,7 +45,7 @@ int main(int argc, char** argv){
     //opterr = 0;
     int c;    
     
-    while((c = getopt(argc, argv, "scbp::")) != -1){
+    while((c = getopt(argc, argv, "hscbp::")) != -1){
         switch (c){
         case 's':
             execution_mode = EXEC_MODE_SERIAL;
@@ -70,8 +71,10 @@ int main(int argc, char** argv){
             benchmark = 1;
             break;        
 
-        case '?':
-            return 1;
+        case 'h':
+        case '?':        
+            printf("%s", help);
+            return 0;
             break;
         
         default:        
@@ -169,7 +172,7 @@ int main(int argc, char** argv){
         break;
     case EXEC_MODE_PARALLEL:
         if(targetdir_compress_parallel(td, dictionary)){
-            printf("huff: compression error. Try incrementing the MEM_USE_FACTOR or using another execution mode.\n");
+            printf("huff: compression error. Try incrementing the MEM_USE_FACTOR or using another execution mode.\nSee 'huff -h' for more information.\n");
             return -1;
         }
         break;
