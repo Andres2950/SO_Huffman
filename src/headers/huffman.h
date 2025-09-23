@@ -167,7 +167,9 @@ void huffman_decompress_bits_by_pos(Node *tree, char *file_input, size_t total_b
       bits_read++;
     }    
   }  
+  fclose(input);
   fclose(out);
+  free(file_out);
 }
 
 void huffman_decompress_bits(Node *tree, FILE *input, size_t total_bits, char *filename){

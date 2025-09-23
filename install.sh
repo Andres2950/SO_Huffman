@@ -23,6 +23,10 @@ install_gcc(){
   fi
 }
 
+
+
+
 install_gcc
-su - "$user" -c "cd '$DIR' && chmod +x build/main && ./build/main"
+make
+#su - "$user" -c "cd '$DIR' && chmod +x build/main && ./build/main"
 #su - "$user" -c "./build/main"
