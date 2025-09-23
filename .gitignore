@@ -1,2 +1,10 @@
 a
 .vscode
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.blg
+*.bbl
+Informe/*.pdf
