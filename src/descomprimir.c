@@ -56,17 +56,20 @@ void parallel_handler(FILE *f, char *dst, Node *huffman_tree, char *src_path){
     strcat(path, "/");
     strcat(path, filename);
     
+    long offset = ftell(f);
     int pid = fork();
     children++;
     if(!pid){
-      huffman_decompress_bits_by_pos(huffman_tree, src_path, total_bits, strdup(path), ftell(f));
+      huffman_decompress_bits_by_pos(huffman_tree, src_path, total_bits, strdup(path), offset);
       exit(0);
     } else {
-      int total_bytes = (total_bits/8) + ((total_bits%8 == 0) ? 0 : 1);
-      fseek(f, total_bytes+1, SEEK_CUR);
+      int total_bytes = (total_bits/8) + (total_bits%8 != 0);
+      fseek(f, total_bytes, SEEK_CUR);
+      int c = fgetc(f);
+      if (c != '\n' && c != EOF) ungetc(c, f);
     }
   }
-  for(int i = 0; i <= children; i++){
+  for(int i = 0; i < children; i++){
     wait(NULL);
   }
 }
