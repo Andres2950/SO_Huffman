@@ -10,7 +10,6 @@ if [ "$EUID" -ne 0 ]; then
   exec su -c "$0"
 fi
 
-echo "Installign GCC.."
 
 install_gcc(){
   if command -v gcc &>/dev/null; then
@@ -35,10 +34,11 @@ install_make(){
 }
 
 
-
+echo "Installign GCC..."
 install_gcc
+echo "Installign Make..."
 install_make
-#make
-#su - "$user" -c "cd '$DIR' && chmod +x build/main && ./build/main"
+# This program is compiled without root permissions
 su - "$user" -c "cd '$DIR' && make"
 mv "$DIR/build/huff" /usr/bin
+mv "$DIR/build/dehuff" /usr/bin
