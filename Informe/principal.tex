@@ -1,3 +1,4 @@
+% !TeX spellcheck = es
 \documentclass{report}
 \usepackage[utf8]{inputenc}
 
@@ -77,7 +78,17 @@ El matemático y científico en computación Donald Knuth diseñó TeX en 1978 c
 
 
 \section{Discusión}
-\subsection{Tabla de resultados}
+\subsection{Resultados de las pruebas}
+\subsubsection{Metodología de las pruebas}
+
+Las pruebas que se realizaron tenían el objetivo de obtener el tiempo de ejecución del programa o una parte de este. Para lograr esto se decidió tomar marcas de tiempo en el código al inicio y al final de la parte que se quería probar. Se utilizó el header time.h tomar los tiempos. El tiempo de ejecución  se imprime en pantalla como la diferencia entre las dos marcas de tiempo.
+
+Se realizaron pruebas en distintas partes de los programas y cada prueba se realizó en las 3 implementaciones diferentes. En total se probó el sistema completo del compresor y sus subsistemas de lectura y compresión; y el sistema completo del descompresor y su subsistema de descompresión y escritura.
+
+Cada prueba se ejecutó 50 veces de forma independiente. La tabla de resultados contiene el promedio de las 50 pruebas.
+
+\subsubsection{Tabla de resultados}
+
 \begin{center}
 	\begin{tabular}{|c|c|c|c|}		
 		
@@ -96,21 +107,27 @@ huff(lectura) &  36 & 25 & 19\\
  \hline
  dehuff(completo) & 5189 & 2092 & 1855\\
  \hline
- dehuff(descompresion y escritura) & 5146 & 1968 & 1629\\
+ dehuff(descompresión y escritura) & 5146 & 1968 & 1629\\
  \hline
  
 	\end{tabular}
 \end{center}
 
-\subsection{Analisis de aceleración}
+\subsection{Análisis de aceleración}
 
-La ley de Amdahl dice que .... y fue hecha por ....
+\subsubsection{Metodología de Análisis}
+
+Gene Amdahl (1922–2015) fue un informático especializado en arquitectura de hardware. Su contribución más conocida a la informática es su ley homónima, propuesta en 1967. 
+
+La ley de Amdahl modela cuánto puede mejorarse el rendimiento del sistema al paralelizar el código. Muestra que, incluso con una potencia de cálculo infinita, las partes secuenciales limitan la aceleración. Esta ley ayuda a los desarrolladores a estimar las mejoras de rendimiento y a optimizar las secciones de código de alto impacto. La fórmula que representa la ley es la siguiente:
+
+
 
 \begin{displaymath}	
 	{T_{m} = {T_{a} \cdot \left((1 - F_{m}) + {F_{m} \over A_{m}}\right)}}
 \end{displaymath}
 
-La ley de Amdahl puede reescribirse para obtener el incremento de velocidad del sistema completo. La formula sería la siguiente:
+Esta fórmula puede reescribirse para obtener la aceleración de un sistema completo luego de que se optimiza un subsistema. La formula sería la siguiente:
 
 \begin{displaymath}	
 	A = {1 \over (1 - F_{m}) + {F_{m} \over A_{m}}}	
@@ -120,9 +137,43 @@ $A$, es la aceleración o ganancia en velocidad conseguida en el sistema complet
 $A_{m}$, es el factor de mejora que se ha introducido en el subsistema mejorado.\\
 $F_{m} $, es la fracción de tiempo que el sistema utiliza el subsistema mejorado.\\
 
+La ley de Amdahl muestra que hay un limite en la aceleración posible que se puede obtener optimizando un programa. La siguiente re escritura de la fórmula nos da la aceleración máxima teórica para un sistema cuando N tiende a infinito.
 
+	\begin{displaymath}	
+		A = {2 \cdot \left 1 \over  S + {1-S \over N}}
+	\end{displaymath}
+Donde:\\
+$A$, es la aceleración máxima conseguida en el sistema completo debido a la mejora de uno de sus subsistemas.\\
+$S$, es la fracción del programa que es secuencial.\\
+$N$,  el factor de mejora.\\
 
+En las próximas secciones se realiza el cálculo par obtener la mejora de los programas de compresión y descompresión luego de haber sido optimizados mediante paralelización y concurrencia. Además se hace una discusión sobre las ganancias obtenidas a través de los diferentes métodos.
 
+\subsubsection{Aceleración del compresor(huff)}
+
+La ejecución del compresor se puede dividir en 3 fases: lectura, creación del árbol huffman, compresión y escritura. La etapa de lectura es donde se lee cada uno de los archivos del directorio fuente, esta etapa puede ser paralelizada.  La etapa de creación del  árbol huffman es donde se junta todo el texto para crear el diccionario con el código huffman, esta etapa no puede ser paralelizada. La etapa de compresión corresponde a la transformación de texto plano a codigo huffman de cada uno de los archivos, esta etapa puede ser paralelizada. La etapa de escritura es donde se escribe el código de cada archivo a un documento binario, esta etapa puede ser paralelizada pero se decidió no hacerlo.
+
+La fracción del programa que abarca cada etapa sería: lectura(0.06), compresión(0.964), creación de árbol y escritura(0.02).  Lo que quiere decir que un 98\% del programa puede paralelizarse, esto implica que la aceleración máxima teórica del programa sería de 100.
+
+La aceleración máxima que se logra obtener mediante el uso de hilos es de 2.341 y mediante el uso de fork es de 2.549. 
+
+Ambas implementaciones mejoran drásticamente el tiempo de ejecución del programa. Ninguno de los dos se acercan al máximo teórico debido al overhead que tiene la paralelización, además el compresor cuenta con un cuello de botella en la etapa de creación del árbol huffman que se encuentra justo entre las dos etapas que se paralelizaron, lo que obliga el programa  a paralelizarse y serializarse dos veces.
+
+Se puede observar que la implementación con paralela  fork es ligeramente más rápida que la  concurrente con hilos.
+
+\subsubsection{Aceleración del descompresor(dehuff)}
+
+La ejecución del descompresor se puede dividir en 2 fases: lectura del diccionario y reconstrucción del árbol, y descompresión y escritura. La primera etapa es donde se lee el inicio del archivo comprimido donde se encuentra el diccionario de códigos y se reconstruye el árbol en base a este, esta etapa no puede paralelizarse. La última etapa corresponde a la lectura del codigo de cada archivo, su descompresión y escritura, esta etapa puede ser paralelizada. 
+
+La fracción del programa que abarca cada etapa sería: lectura de diccionario y reconstrucción de árbol (0.01), y descompresión y escritura(0.99).  Lo que quiere decir que un 99\% del programa puede paralelizarse, esto implica que la aceleración máxima teórica del programa sería de 200.
+
+La aceleración máxima que se logra obtener mediante el uso de hilos es de 2.444 y mediante el uso de fork es de 2.727 
+
+Ambas implementaciones mejoran drásticamente el tiempo de ejecución del programa. Ninguno de los dos se acercan al máximo teórico debido al overhead que tiene la paralelización.
+
+ Se puede resaltar que el compresor y el descompresor tienen una fracción virtualmente idéntica de sus sistemas que fue paralelizado. Sin embargo, el descompresor obtuvo una mejor aceleración, indiferente de la implementación. Esto puede deberse a que descompresor realiza todas las tareas paralelas en el mismo punto en el código, sin ningún cuello de botella.
+
+Se puede observar que la implementación paralela con fork es ligeramente más rápida que la  concurrente con hilos.
 
 
 \chapter{Ejemplos}\label{ejemplos}
