@@ -29,4 +29,5 @@ install_gcc(){
 install_gcc
 #make
 #su - "$user" -c "cd '$DIR' && chmod +x build/main && ./build/main"
-su - "$user" -c "make"
+su - "$user" -c "cd '$DIR' && make"
+mv "$DIR/build/huff" /usr/bin
