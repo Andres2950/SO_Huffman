@@ -23,10 +23,21 @@ install_gcc(){
   fi
 }
 
+install_make(){
+  if command -v make &>/dev/null; then
+    echo "Make is already installed. Version: $(make --version | head -n1)"
+  else
+    if command -v apt &>/dev/null; then
+      apt update
+      apt install -y make
+    fi
+  fi
+}
 
 
 
 install_gcc
+install_make
 #make
 #su - "$user" -c "cd '$DIR' && chmod +x build/main && ./build/main"
 su - "$user" -c "cd '$DIR' && make"
