@@ -40,5 +40,5 @@ echo "Installign Make..."
 install_make
 # This program is compiled without root permissions
 su - "$user" -c "cd '$DIR' && make"
-mv "$DIR/build/huff" /usr/bin
-mv "$DIR/build/dehuff" /usr/bin
+cp "$DIR/build/huff" /usr/bin
+cp "$DIR/build/dehuff" /usr/bin
