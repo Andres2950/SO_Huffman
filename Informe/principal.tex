@@ -65,17 +65,57 @@
 
 \chapter{Introducción}\label{intro}
 
-Esta es una plantilla para trabajar documentos formales en \LaTeX para informes de trabajos del ITCR, fue diseñada para el curso Fundamentos de Organización de Computadoras.
-Esta plantilla utiliza el formato de citas y referencias de APA usando el paquete apacite.
+Para este proyecto se implementó un compresor (y decompresor) de archivos de texto utilizando el algoritmo de Huffman.
+Este toma un directorio con archivos de texto y los comprime en un solo archivo usando binario, al descomprimir, se restaura el directorio y los archivos.
+Este sistema consiste en dos partes principales,  programa que comprime y el programa que comprime.
+Ambos ofrecen tres modos de ejecución: serial, concurrente y paralelo.
 
-Las tareas y trabajos universitarios deben entregarse en un formato formal que sigan ciertas reglas de estilo. 
-\LaTeX es una buena solución para redactar este tipo de documentos sin preocuparse por la estructura ni el diagramado.
+\section {Proyecto Gutenberg}
 
-\section{Antecedentes}\label{antecedentes}
+Este proyecto fue probado con los top 100 libros de los últimos 30 días del proyecto Gutenberg.
+Este proyecto, fundado por Michael  Hart, consiste en una colección de libros electrónicos gratuitos, que son versiones digitalizadas de libros que existen en físicamente \cite{gutenberg}.
+Esta colección ofrece múltiples formatos para descargsr y leer libros, entre estos texto con formato UTF-8, el cual fue usado para este proyecto.
 
-El matemático y científico en computación Donald Knuth diseñó TeX en 1978 como una respuesta a la necesidad de la época de redactar documentos formales con lenguaje matemático que los editores de texto de la época no podían solventar. En 1984 Leslie Lamport modificó TeX y creó una serie de comandos y macros más sencillos y con más herramientas. A esta versión Lamport le llamó \LaTeX \cite{lopez18}.
+\section{Algoritmo de Huffman}
+
+El algoritmo de Huffman es un algoritmo de compresión de texto, creado por David Huffman en 1952. Este fue creado ya que su profesor ofreció a sus estudiantes dos opciones: hacer el examen final, o escribir un paper sobre cómo encontrar el código óptimo para todos los símbolo en un texto. Lo que su profesor no explicó,  es que este problema ers un problema abierto y que él mismo estaba trabajando en él. Luego de pensar por mucho tiempo,  Huffman inventó un algoritmo que utiliza un árbol binario para encontrear dichos códigos óptimos. 
+
+%https://old.maa.org/press/periodicals/convergence/discovery-of-huffman-codes 
+
+Lo primero para entender este algoritmo es entender que las computadoras guardsn información de texto en formatos como ASCII o UNICODE, cada símbolo dentro de estos estándares tienen un código único que permite a la computadora diferenciarlos entre sí. El problema con estos estándares es que se le asigna la misma cantidad de bytes a todos los símbolos,  esto significa que una letra muy común como la A, tiene el mismo tamaño que una menos común,  como la Z. Idealmente las letras más común deberían tener un tamaño más pequeño. 
+
+El algoritmo de Huffman busca compactar el texto, encontrando los símbolos más comunes en un texto y reduciendo el tamaño que toma em guardarlos. Para esto se cuenta la cantidad de símbolos en el texto y a cada uno se les asigna un código en binario, entre más común el simbolo más corto su código. Estos codigos se arman en un arbol binario, cada nodo interno teniendo la posibilidad de conectarse con un hijo por medio de un 1 o un 0, al recorrer un camino específico del arbol desde la raíz hasta una hoja, se forma el código que representa un símbolo del texto. 
+
+%https://web.stanford.edu/class/archive/cs/cs106b/cs106b.1216/assignments/7-huffman/huffman_background.html 
 
 
+\section {Algoritmos de compresión con y sin pérdida}
+
+Huffman es un algoritmo de compresión sin pérdida, esto significa que al comprimirse no se pierde contenido alguno del archivo.
+La compresión sin pérdida remueve metafata innecesaria en el archivo, que luego puede ser reconstruida para su uso.
+Esto es útil cuando se tiene archivos que paran de terne sentido para el usuario si se pierde su contenido, como archivos de texto.
+
+Como su nombre lo explica, un algoritmo de compresión con pérdida, es un algoritmo que comprime el tamaño del archivo borrando información permanentemente.
+Este tipo de información puede ser útil cuando el archivo sigue teniendo sentido para el usuario incluso si se perdió parte del contenido binario.
+Un ejemplo de esto es una imagen,  al comprimirse es posible que esta sea un poco más borrosa que antes, pero esta sigue teniendo sentido y en el mejor caso, la diferencia no puede ser vista por el ojo humano.
+
+%https://www.geeksforgeeks.org/computer-networks/difference-between-lossy-compression-and-lossless-compression/ 
+
+\section{Paralelismo y concurrencia}
+
+Concurrencia es cuando se están trabajando múltiples tareas al mismo tiempo, pero no necesariamente correrlas al mimo tiempo.
+Cada tarea concurrente, toma turnos en mismo procesador. Esto es útil ya que es posible que cada tarea no solo necesite tiempo del procesador, si no que es posible que necesite otros servicios, como I/O, por lo que hace que se administre mejor el tiempo que utiliza cada hilo en el procesador. 
+
+Paralelismo, es cuando se ejecutan tareas al mismo tiempo, en distintods procesadores. 
+Esto permite que un solo programa pueda aprovechar más su uso del procesador, teniendo varios programas hijo que se encargan de subtareas.
+
+La gran diferencia entre estos es que la concurrencia trata sobre manejar múltiples computaciones manejando el uso del CPU, mientras que el paralelismo corre múltiples computaciones al mismo tiempo.
+Se puede notar que la concurrencia no es realmente que los hilos corren al mismo tiempo, si no que se intercalan los usos del CPU, dándo la ilusión de que corren al mismo tiempo.
+
+%https://www.geeksforgeeks.org/operating-systems/difference-between-concurrency-and-parallelism/
+
+
+\chapter {Desarrollo}
 \section{Discusión}
 \subsection{Tabla de resultados}
 \begin{center}
@@ -125,123 +165,6 @@ $F_{m} $, es la fracción de tiempo que el sistema utiliza el subsistema mejorad
 
 
 
-\chapter{Ejemplos}\label{ejemplos}
-
-\section{Figuras}\label{figuras}
-\begin{figure}
-    \centering
-    \includegraphics[width=0.8\linewidth]{figuras/maquinaDeEstados.jpg}
-    \caption{Ilustración de una máquina de estados finitos}
-    \label{fig:msf}
-\end{figure}
-
-Las figuras nos permiten ilustrar conceptos de forma más directa. Adicionalmente muchos dominios emplean lenguajes gráficos para representar ciertos principios o procesos. La figura permite incorporar este tipo de herramientas visuales al documento. 
-La figura \ref{fig:msf} representa una máquina de estados finitos, nótese como la figura incorpora un texto descriptivo. Este texto es necesario para brindar mejor contexto a la imagen, especialmente cuando no se diagrama junto al texto que acompaña.
-
-\section{Listas y Enumeraciones}\label{listas}
-
-Las listas de viñetas y enumeraciones nos permiten organizar información y secuenciarla de forma visualmente agradable. Bien empleadas las listas pueden ayudar a organizar los datos presentados y establecer cierta noción de jerarquía.
-
-Una lista puede contener solamente algunos elementos simples:
-\begin{itemize}
-    \item ítem 1
-    \item ítem 2
-    \item ítem 3
-\end{itemize}
-
-Pero también se pueden emplear de formas más complejas e interesantes:
-
-\begin{itemize}
-    \item \textbf{Conceptos amplios:} Por ejemplo una lista puede usarse para representar ideas más complejas que pueden organizarse en algún tipo de jeraruía. 
-    Una lista de este tipo puede contener mucho texto, párrafos inclusive, y aún así mantener la indentación y estructura lineal que permite expresar la relación como parte de la información transmitida.
-    
-    Los elementos de la lista se pueden introducir con un encabezado en \textbf{negrita} que permita asociar los conceptos con sus definiciones. Similar a las entradas de un diccionario.
-    
-    \item \textbf{Contenido multinivel:} Otra aplicación de las listas es que permiten organizar contenido en estructuras jerárquicas. En \LaTeX una lista puede:
-    
-    \begin{itemize}
-        \item Anidarse dentro de otra lista
-        \item Mostrando múltiples elementos
-        \item Dentro de una estructura jerárquica
-        \begin{itemize}
-            \item Tan profunda
-            \item Como el autor
-            \item Lo requiera
-        \end{itemize}
-    \end{itemize}
-\end{itemize}
-
-Por supuesto si podemos hacer listas de viñetas, \LaTeX también nos da la posibilidad de usar enumeraciones:
-
-\begin{enumerate}
-    \item Las enumeraciones tienen las mismas propiedades.
-    \item La única diferencia es que los ítemes se identifican con números, no con viñetas.
-    \item Pero soportan:
-    \begin{enumerate}
-        \item texto corto
-        \item texto largo
-        \item multinivel
-        \item Inclusive es posible combinar ambas estrategias:
-        \begin{itemize}
-            \item Enumeraciones con listas adentro
-            \item Listas con enumeraciones adentro
-            \item Cualquier otra combinación que sea necesaria
-            
-        \end{itemize}
-    \end{enumerate}
-\end{enumerate}
-
-\section{Referencias Internas}\label{referencias}
-En el capítulo \ref{intro} se explica el propósito del documento y algunos antecedentes. Mientras que el capítulo \ref{ejemplos} se enfoca más en funcionalidades puntuales que pueden ser interesantes de \LaTeX. Como se puede apreciar, una de esas funcionalidades es la capacidad de referenciar internamente contenido, usando los comandos \textit{label} y \textit{ref} es posible citar otras partes del documento. Cualquier elemento numerado con una \textbf{etiqueta} se puede referenciar y \LaTeX usará la numeración correcta para referenciar el elemento donde se cite. Por ejemplo en esta sección se puede citar la figura \ref{fig:msf} o la sección \ref{antecedentes}. Una propiedad muy práctica de esta herramienta, es que combinada con el paquete \textbf{hyperref} permite que el documento se entrelace fácilmente, creando hipervínculos entre las secciones justo donde se referencian.
-
-Nótese que estas son referencias internas. Las citas bibliográficas tienen un comando especial: el comando \textbf{cite}.
-
-\section{Código fuente}
-En temas de ingeniería es normal que necesitemos programar de vez en cuando. Para esto \LaTeX brinda funcionalidades para renderizar código fuente con un resultado bastante profesional.
-Por ejemplo podemos ver el código fuente de un \textit{Hola Mundo} en el lenguaje de programación C:
-
-\begin{lstlisting}
-#include <stdio.h>
-
-int main() {
-   
-   printf("Hello, World!");
-   return 0;
-}
-\end{lstlisting}
-
-Hay más herramientas para mostrar texto técnico. Por ejemplo el ambiente \textit{verbatim} permite mostrar texto con símbolos que normalmente están reservados para código de \LaTeX. Por ejemplo, estas son las primeras líneas de este documento:
-
-\begin{verbatim}
-\documentclass{report}
-\usepackage[utf8]{inputenc}
-
-% Títulos automáticos en español
-\usepackage[spanish]{babel}
-
-% Soporte para buenas urls e hipervínculos entre secciones
-\usepackage{hyperref}
-\end{verbatim}
-
-\section{Más}
-\LaTeX tiene muchísimas características, tantas que es imposible cubrirlas todas en un sólo documento. Por eso voy a dejar una lista breve de algunos enlaces de interés que podrían ser útiles según el tipo de documento:
-
-\begin{itemize}
-    \item \textbf{Tablas:} \\
-    \url{https://manualdelatex.com/tutoriales/tablas}
-    
-    \item \textbf{Bibliografía con Bibtex:}\\
-    \url{https://www.overleaf.com/learn/latex/bibliography_management_with_bibtex}
-    
-    \item \textbf{Expresiones Matemáticas:}\\
-    \url{http://metodos.fam.cie.uva.es/~latex/apuntes/apuntes3.pdf}
-    
-    \item \textbf{Presentaciones de Diapositivas:}\\
-    \url{https://www.overleaf.com/learn/latex/beamer}
-    
-    \item \textbf{Gráficas generadas en \LaTeX}\\
-    \url{https://www.overleaf.com/gallery/tagged/charts}    
-\end{itemize}
 
 % Estilo de bibliografía APA
 % Si quiere usar el estilo IEEE comente esta línea
