@@ -70,7 +70,6 @@
 
 \tableofcontents
 
-
 \chapter{Introducción}\label{intro}
 
 Para este proyecto se implementó un compresor (y decompresor) de archivos de texto utilizando el algoritmo de Huffman.
@@ -155,6 +154,58 @@ La función \texttt{wait()} es usada en el proceso padre esta hace que el padre 
 
 
 \section {Estrategias para paralelizar los programas}
+
+
+\section{Desarrollo}
+
+\subsection{Descripción del proyecto}
+El proyecto presentado trata sobre la implementación de un programa de compresión y descompresión de directos de archivos de texto plano. Está diseñado específicamente para la distribución de Debian, pero puede ser ejecutado en otras distribuciones de Linux que compartan las mismas características. La diferencia rige en el archivo de instalación de paquetes necesarios como gcc y make. Sin embargo, estos pueden ser instalados manualmente por el usuario que desee utilizar el programa.
+
+Para realizar las labores de compresión se realiza la utilización del algoritmo de Huffman, éste consiste en tomar las frecuencias de cada conjunto de caracteres presentados en el archivo y crear una lista que los ordene de manera ascendente. Posteriormente se crea el árbol de Huffman, para crearlo se basó en (cap) en donde se realiza la eliminación de los dos primeros nodos de la lista y se agregan a un nuevo nodo que contenga la suma de sus frecuencias. El nodo con menor frecuencia se coloca a la derecha (el primero) y el de mayor frecuencia a la izquierda (el segundo). Luego este nodo se inserta de nuevo a la lista siguiendo el ordenamiento por frecuencia, y así se realiza sucesivamente hasta tener un solo elemento que sería la raíz del árbol.
+
+Una vez creado el árbol se visitan recursivamente los hijos de la raíz para formar el diccionario del código en binario para cada carácter leído de los archivos. Este diccionario se forma concatenando un 0 al código si es que está hacía la derecha del nodo actual o un 1 si está a la izquierda, esto se realiza hasta llegar a un nodo hoja que representaría el carácter buscado.
+
+Con el diccionario formado la compresión del archivo se reduce simplemente a ir reemplazando cada carácter por su equivalente en el archivo de salida objetivo. Para facilitar la descompresión se agrega al inicio del archivo el diccionario formado seguido por el nombre del primer archivo comprimido y la cantidad de bits que este representa. De esta manera, cuando se va a descomprimir se extrae primero el árbol, luego el nombre del archivo junto con su tamaño en bits y posteriormente se realiza la descompresión de dicho archivo, cuando la cantidad de bits reemplazados llegan al total que poseía dicho archivo se estaría cerrando y guardando para procesar el siguiente. Este proceso se realiza repetidamente hasta que no hayan archivos o bits por leer.
+
+\subsection{Instrucciones}
+\subsubsection{Cómo instalar el programa}
+\begin{enumerate}
+  \item Descargue el código fuente del programa. Puede hacerlo de las dos siguientes formas:
+    \begin{itemize}
+      \item Dirigirse al repositorio de GitHub mediante su navegador a través del siguiente link: \url{https://github.com/Andres2950/SO\_Huffman.git}
+      \item Instalarlo directamente con el comando \\
+    \texttt{wget \url{https://github.com/Andres2950/SO\_Huffman/archive/refs/heads/main.zip}}
+    \end{itemize}
+  \item Descomprima el archivo .zip descargado utilizando el comando \texttt{unzip}.
+\item Al extraer el archivo podrá observar la estructura de organización mencionada en la sección anterior.
+\item Ejecute el archivo \texttt{install.sh}, asegúrese de qué tenga permisos de ejecución, puede utilizar el comando \texttt{chmod +x install.sh} en caso de que no los posea y luego ejecute de la siguiente forma \texttt{./install.sh}. \\
+  Este archivo se hará cargo de la instalación del compilador \textit{gcc} necesario para compilar el código fuente. Además hará la instalación del paquete \textit{make} para la ejecución de archivos makefile, dicho archivo posee las instrucciones de compilación de \textit{gcc} para resolver todas las dependencias que se encuentran en el directorio \textit{src/headers}.  
+\item Note que la instalación de dichos paquetes requiere permisos de usuarios root, al ejecutar el archivo \texttt{install.sh} este se volverá a ejecutar con dichos permisos, para esto solicitará la contraseña del usuario root para tener dichos permisos de ejecución (la contraseña es totalmente invisible para el programa) y así poder descargar los paquetes. Mostrará un mensaje como el de la figura N y esperará la entrada correcta.
+\item La compilación de los archivos se realiza sin permisos root.
+\item Además, el \texttt{install.sh} hará una copia de los binarios \texttt{huff} y \texttt{dehuff} en el directorio \textit{/usr/bin} de la máquina para poner ser accedidos desde cualquier lugar y utilizado en múltiples directorios sin necesidad de mover los archivos a comprimir o descomprimir a una carpeta en particular.
+
+\end{enumerate}
+
+\subsubsection{Cómo utilizar el programa}
+Una vez terminado el procedimiento de instalar el programa puede utilizar el comando huff para comprimir archivos. Dicho comando posee una serie de parámetros para sus distintos modos de ejecución. A continuación se detallan cada uno.
+\begin{itemize}
+  \item \textbf{huff -h}\\ \hspace{2cm}
+    Provee una guía de los parámetros requeridos por el programa y su orden de entrada. (Véase figura N)
+  \item \textbf{huff [Opción] src dst} o \textbf{dehuff [Opción] src dst}\\
+src es el directorio objetivo a ser comprimido/descomprimido\\
+dst es el archivo de destino
+  \item \textbf{Opciones} 
+    \begin{itemize}
+      \item \textbf{-s} modo de ejecución serial.
+      \item \textbf{-p} modo de ejecución paralela usando fork.
+      \item \textbf{-c} modo de ejecución concurrente usando pthread
+      \item \textbf{-b} modo de Benchmark para comparar los tiempos de ejecuión entre los anteriores modos.
+    \end{itemize}
+\end{itemize}
+
+
+
+
 
 \section{Discusión}
 \subsection{Resultados de las pruebas}
