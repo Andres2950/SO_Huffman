@@ -34,25 +34,31 @@
 }
 
 
-\def \unidad{Nombre de la escuela o unidad}
-\def \programa{Nombre del programa o carrera}
-\def \curso{Código - Nombre del curso}
-\def \titulo{Título del Informe}
-\def \subtitulo {Subtítulo}
+\def \unidad{Escuela de Ingeniería en Computación}
+\def \programa{Ingeniería en Computación}
+\def \curso{IC6600 - Principios de Sistemas Operativos}
+\def \titulo{Proyecto 1}
+\def \subtitulo {Codificación de Huffman}
 \def \autores{
-    Nombre del primer autor\\
+    Gerald Calderón\\
     Correo electrónico\\
     Carnet\\
     
     \vspace{0.5cm}
     
-    Nombre del segundo autor\\
+    Óscar Obando\\
+    osobando@estudiantec.cr\\
+    2023091684
+    
+    \vspace{0.5cm}
+    
+    Samuel Zúñiga\\
     Correo electrónico\\
     Carnet
 }
-\def \fecha{Febrero 2021}
+\def \fecha{Septiembre 2025}
 \def \lugar{
-    Provincia, 
+    San José, 
     Costa Rica
 }
 
@@ -66,15 +72,89 @@
 
 \chapter{Introducción}\label{intro}
 
-Esta es una plantilla para trabajar documentos formales en \LaTeX para informes de trabajos del ITCR, fue diseñada para el curso Fundamentos de Organización de Computadoras.
-Esta plantilla utiliza el formato de citas y referencias de APA usando el paquete apacite.
+Para este proyecto se implementó un compresor (y decompresor) de archivos de texto utilizando el algoritmo de Huffman.
+Este toma un directorio con archivos de texto y los comprime en un solo archivo en binario, al descomprimir, se restaura el directorio y los archivos dentro de este.
+Este sistema consiste en dos partes principales,  el programa que comprime y el programa que descomprime.
+Ambos ofrecen tres modos de ejecución: serial, concurrente y paralelo.
 
-Las tareas y trabajos universitarios deben entregarse en un formato formal que sigan ciertas reglas de estilo. 
-\LaTeX es una buena solución para redactar este tipo de documentos sin preocuparse por la estructura ni el diagramado.
+\section {Proyecto Gutenberg}
 
-\section{Antecedentes}\label{antecedentes}
+Este proyecto fue probado con los top 100 libros de los últimos 30 días del proyecto Gutenberg.
+Este proyecto, fundado por Michael  Hart, consiste en una colección de libros electrónicos gratuitos, que son versiones digitalizadas de libros que existen en físicamente \cite{ref0}.
+Esta colección ofrece múltiples formatos para descargar y leer libros, entre estos texto con formato UTF-8, el cual fue usado para este proyecto.
 
-El matemático y científico en computación Donald Knuth diseñó TeX en 1978 como una respuesta a la necesidad de la época de redactar documentos formales con lenguaje matemático que los editores de texto de la época no podían solventar. En 1984 Leslie Lamport modificó TeX y creó una serie de comandos y macros más sencillos y con más herramientas. A esta versión Lamport le llamó \LaTeX \cite{lopez18}.
+\section{Algoritmo de Huffman}
+
+El algoritmo de Huffman es un algoritmo de compresión de texto, creado por David Huffman en 1952 \cite{ref2}.
+Este fue creado ya que su profesor ofreció a sus estudiantes dos opciones: hacer el examen final, o escribir un paper sobre cómo encontrar el código óptimo para todos los símbolo en un texto.
+Lo que su profesor no explicó,  es que este problema era un problema abierto y que él mismo estaba trabajando en él.
+Luego de pensar por mucho tiempo,  Huffman inventó un algoritmo que utiliza un árbol binario para encontrear dichos códigos óptimos. 
+
+
+Lo primero para entender este algoritmo es entender que las computadoras guardan información de texto en formatos como ASCII o UNICODE, cada símbolo dentro de estos estándares tienen un código único que permite a la computadora diferenciarlos entre sí \cite{ref3}.
+El problema con estos estándares es que se le asigna la misma cantidad de bytes a todos los símbolos,  esto significa que un símbolo muy común, tiene el mismo tamaño que uno poco común.
+Idealmente los símbolos más comúnes deberían tener un tamaño más pequeño. 
+
+El algoritmo de Huffman busca compactar el texto, encontrando los símbolos más comunes en un texto y mapeando cada uno a un código nuevo \cite{ref3}.
+Para esto, se cuenta la cantidad de veces que aparece cada símbolo en el texto y a cada uno se les asigna un código en binario, entre más común el símbolo más corto su código.
+Se arma un arbol binario en dónde cada nodo interno tiene la posibilidad de conectarse con un hijo por medio de un 1 o un 0, al recorrer un camino específico del arbol desde la raíz hasta una hoja, se forma el código que representa un símbolo del texto. 
+
+
+
+\section {Algoritmos de compresión con y sin pérdida}
+
+El algoritmo de Huffman es un algoritmo de compresión sin pérdida, esto significa que al comprimirse no se pierde contenido alguno del archivo \cite{ref4}.
+La compresión sin pérdida remueve metafata innecesaria en el archivo, que luego puede ser reconstruida para su uso.
+Esto es útil cuando se tiene archivos que paran de terne sentido para el usuario si se pierde su contenido, como archivos de texto.
+Pero este no es el único tipo de algoritmos de compresión, ya que, existen los algoritmos de compresión con pérdida.
+
+Como su nombre lo explica, un algoritmo de compresión con pérdida, es un algoritmo que comprime el tamaño del archivo borrando información permanentemente \cite{ref4}.
+Este tipo de información puede ser útil cuando el archivo sigue teniendo sentido para el usuario incluso si se perdió parte del contenido binario.
+Un ejemplo de esto es una imagen,  al comprimirse es posible que esta sea un poco más borrosa que antes, pero esta sigue teniendo sentido y en el mejor caso, la diferencia no puede ser vista por el ojo humano.
+
+
+\section{Paralelismo y concurrencia}
+
+Como dicho anteriormente, para este proyecto se solicitó crear 3 modos de ejecución para cada comprimir y descomprimir los archivos. 
+Serial es el modo de ejecución más fácil de estos tres, y este modo de ejecución es cuando una tarea completa es hecha en un solo procesador, sin separar la ejecución de las subtareas.
+Mientras que su facilidad de uso da muchas ventajas, los siguientes dos modos de ejecución proveen ventajas como tener un mejor tiempo de ejecución cuando son utilizados correctamente.
+
+Concurrencia es cuando se está trabajando una tarea, y se divide esta en subtareas que son independientes las unas de las otras, pero no necesariamente se corren al mismo tiempo.
+Cada tarea concurrente, toma turnos en el mismo procesador \cite{ref1}.
+Esto es útil ya que es posible que cada tarea no solo necesite tiempo del procesador, si no que es posible que necesite otros servicios, como I/O, por lo que hace que se administre mejor el tiempo que utiliza cada hilo en cada servicio que necesita. 
+Esta necesita un cambio de contexto cada vez que el procesador va a cambiar de hilo. 
+
+Paralelismo, es cuando se ejecutan varias subtareas independientes al mismo tiempo, en distintos procesadores \cite{ref1}. 
+Esto permite que un solo programa pueda aprovechar más su uso del los recursos de la computadora, teniendo varios programas hijo que se encargan de subtareas.
+Este no necesita cambiar de contexto, ya que cada sub tarea es ejecutada en un programa individual, por lo que no es necesario cambiar el contexto. 
+
+La gran diferencia entre estos es que la concurrencia trata sobre manejar múltiples computaciones manejando el uso del CPU, mientras que el paralelismo corre múltiples computaciones al mismo tiempo \cite{ref1}.
+Se puede notar que la concurrencia no es realmente que los hilos corren al mismo tiempo, si no que se intercalan los usos del CPU, dándo la ilusión de que corren al mismo tiempo. Además, por su naturaleza, la concurrencia puede correr en un solo procesador, pero el paralelismo necesita uno o más obligatoriamente.
+Hay una división bastante clara entre estos dos, ya que el objetivo de la concurrencia es mejorar la eficiencia aprovechando el tiempo en dónde una parte del programa está esperando por I/O, mientras que la paralelización busca mejorar la eficiencia del programa haciendo múltiples tareas al mismo tiempo. 
+
+
+
+\chapter {Desarrollo}
+
+\section {Función fork() y biblioteca pthread}
+
+\subsection {Función fork() en C}
+
+La función \texttt{fork()} en el lenguaje de programación C es usada para duplicar el proceso el cuál la llama \cite{ref5}.
+Cuando un proceso se duplica se obtienen dos procesos, el proceso padre y el proceso hijo, el cuál es la dúplica del padre.
+La función \texttt{fork()} no toma ningún parámetro y devuelve un número entero: si este número es negativo, significa que no se logró crear el proceso hijo; si este número es 0, indica que el proceso el cuál leyó el valor es el proceso hijo; finalmente, si este valor es positivo, indica que el proceso es el padre, más específicamente, este valor corresponde a el ID del hijo creado. 
+Además, si el proceso padre se cierra inesperadamente, el proceso hijo también es matado.
+
+Una vez se crea el proceso hijo, es posible que se quiera que este solo corra una parte específica del código.
+Para manejar esto se utilizan las funciones \texttt{exit()} y \texttt{wait()}.
+La función \texttt{exit()} debe ser llamada desde un proceso hijo, una vez esto ocurre, el proceso hijo termina inmediatamente; además, esta función toma un número entero como parámetro, este se usa para revisar el estado de salida del hijo.
+La función \texttt{wait()} es usada en el proceso padre esta hace que el padre espera a que el hijo termine antes de seguir con su ejecución, esta función toma como parámetro una referencia a un entero, una vez el hijo termina, se agrega el estado de salida del hijo a esta referencia, si no se quiere recibir el estado de salida simplemente se puede usar \texttt{wait(NULL)}.
+
+\subsection {Biblioteca pthread en C}
+
+
+\section {Estrategias para paralelizar los programas}
+
 
 \section{Desarrollo}
 
@@ -240,124 +320,22 @@ Ambas implementaciones mejoran drásticamente el tiempo de ejecución del progra
 
 Se puede observar que la implementación paralela con fork es ligeramente más rápida que la  concurrente con hilos.
 
+\section{Conclusiones}
 
-\chapter{Ejemplos}\label{ejemplos}
+Los resultados obtenidos muestran una clara mejora en los progamas de compresión y de descompresión, a partir de esto se puede concluir que el algoritmo de Huffman implementado aprovecha mucho de las ventajas que proveen la concurrencia y paralelización. 
+Esto se debe a que ambos programas manejan distintos archivos independientes entre ellos.
+Esta independencia permite que los archivos puedan ser manejados por separado, sea este procesamiento por medio de hilos o de procesos hijo.
+Por lo que se puede decir que cuando hay muchas subtareas independientes por hacer en un programa, es bueno considerar alguno de los dos. 
 
-\section{Figuras}\label{figuras}
-\begin{figure}
-    \centering
-    \includegraphics[width=0.8\linewidth]{figuras/maquinaDeEstados.jpg}
-    \caption{Ilustración de una máquina de estados finitos}
-    \label{fig:msf}
-\end{figure}
+A pesar de lo dicho anteriormente, ambos en ambos modos de ejecución, ninguno se acercó al límite teórico que se propuso para cada uno.
+A partir de esto se puede concluir que el overhead que produce el uso de hilos o de subprocesos no es trivial.
+Al usar cualquiera de estos dos siempre es importante tomar en cuenta el overhead que estos causan para determinar si realente vale la pena usar alguna de las técnicas descritas anterormente.
 
-Las figuras nos permiten ilustrar conceptos de forma más directa. Adicionalmente muchos dominios emplean lenguajes gráficos para representar ciertos principios o procesos. La figura permite incorporar este tipo de herramientas visuales al documento. 
-La figura \ref{fig:msf} representa una máquina de estados finitos, nótese como la figura incorpora un texto descriptivo. Este texto es necesario para brindar mejor contexto a la imagen, especialmente cuando no se diagrama junto al texto que acompaña.
+Comparando los resultados que dieron las pruebas de concurrencia y las pruebas de paralelización, se puede concluir que la paralelización es ligeramente mejor que la concurrencia.
+Esto se puede deber a la naturaleza de la paralelización, gracias a que cada proceso puede correr en un procesador distinto. 
+También se puede deber a la necesidad de la concurrencia de cambiar de contexto frecuentemente, lo que también toma recursos de la computadora.
 
-\section{Listas y Enumeraciones}\label{listas}
 
-Las listas de viñetas y enumeraciones nos permiten organizar información y secuenciarla de forma visualmente agradable. Bien empleadas las listas pueden ayudar a organizar los datos presentados y establecer cierta noción de jerarquía.
-
-Una lista puede contener solamente algunos elementos simples:
-\begin{itemize}
-    \item ítem 1
-    \item ítem 2
-    \item ítem 3
-\end{itemize}
-
-Pero también se pueden emplear de formas más complejas e interesantes:
-
-\begin{itemize}
-    \item \textbf{Conceptos amplios:} Por ejemplo una lista puede usarse para representar ideas más complejas que pueden organizarse en algún tipo de jeraruía. 
-    Una lista de este tipo puede contener mucho texto, párrafos inclusive, y aún así mantener la indentación y estructura lineal que permite expresar la relación como parte de la información transmitida.
-    
-    Los elementos de la lista se pueden introducir con un encabezado en \textbf{negrita} que permita asociar los conceptos con sus definiciones. Similar a las entradas de un diccionario.
-    
-    \item \textbf{Contenido multinivel:} Otra aplicación de las listas es que permiten organizar contenido en estructuras jerárquicas. En \LaTeX una lista puede:
-    
-    \begin{itemize}
-        \item Anidarse dentro de otra lista
-        \item Mostrando múltiples elementos
-        \item Dentro de una estructura jerárquica
-        \begin{itemize}
-            \item Tan profunda
-            \item Como el autor
-            \item Lo requiera
-        \end{itemize}
-    \end{itemize}
-\end{itemize}
-
-Por supuesto si podemos hacer listas de viñetas, \LaTeX también nos da la posibilidad de usar enumeraciones:
-
-\begin{enumerate}
-    \item Las enumeraciones tienen las mismas propiedades.
-    \item La única diferencia es que los ítemes se identifican con números, no con viñetas.
-    \item Pero soportan:
-    \begin{enumerate}
-        \item texto corto
-        \item texto largo
-        \item multinivel
-        \item Inclusive es posible combinar ambas estrategias:
-        \begin{itemize}
-            \item Enumeraciones con listas adentro
-            \item Listas con enumeraciones adentro
-            \item Cualquier otra combinación que sea necesaria
-            
-        \end{itemize}
-    \end{enumerate}
-\end{enumerate}
-
-\section{Referencias Internas}\label{referencias}
-En el capítulo \ref{intro} se explica el propósito del documento y algunos antecedentes. Mientras que el capítulo \ref{ejemplos} se enfoca más en funcionalidades puntuales que pueden ser interesantes de \LaTeX. Como se puede apreciar, una de esas funcionalidades es la capacidad de referenciar internamente contenido, usando los comandos \textit{label} y \textit{ref} es posible citar otras partes del documento. Cualquier elemento numerado con una \textbf{etiqueta} se puede referenciar y \LaTeX usará la numeración correcta para referenciar el elemento donde se cite. Por ejemplo en esta sección se puede citar la figura \ref{fig:msf} o la sección \ref{antecedentes}. Una propiedad muy práctica de esta herramienta, es que combinada con el paquete \textbf{hyperref} permite que el documento se entrelace fácilmente, creando hipervínculos entre las secciones justo donde se referencian.
-
-Nótese que estas son referencias internas. Las citas bibliográficas tienen un comando especial: el comando \textbf{cite}.
-
-\section{Código fuente}
-En temas de ingeniería es normal que necesitemos programar de vez en cuando. Para esto \LaTeX brinda funcionalidades para renderizar código fuente con un resultado bastante profesional.
-Por ejemplo podemos ver el código fuente de un \textit{Hola Mundo} en el lenguaje de programación C:
-
-\begin{lstlisting}
-#include <stdio.h>
-
-int main() {
-   
-   printf("Hello, World!");
-   return 0;
-}
-\end{lstlisting}
-
-Hay más herramientas para mostrar texto técnico. Por ejemplo el ambiente \textit{verbatim} permite mostrar texto con símbolos que normalmente están reservados para código de \LaTeX. Por ejemplo, estas son las primeras líneas de este documento:
-
-\begin{verbatim}
-\documentclass{report}
-\usepackage[utf8]{inputenc}
-
-% Títulos automáticos en español
-\usepackage[spanish]{babel}
-
-% Soporte para buenas urls e hipervínculos entre secciones
-\usepackage{hyperref}
-\end{verbatim}
-
-\section{Más}
-\LaTeX tiene muchísimas características, tantas que es imposible cubrirlas todas en un sólo documento. Por eso voy a dejar una lista breve de algunos enlaces de interés que podrían ser útiles según el tipo de documento:
-
-\begin{itemize}
-    \item \textbf{Tablas:} \\
-    \url{https://manualdelatex.com/tutoriales/tablas}
-    
-    \item \textbf{Bibliografía con Bibtex:}\\
-    \url{https://www.overleaf.com/learn/latex/bibliography_management_with_bibtex}
-    
-    \item \textbf{Expresiones Matemáticas:}\\
-    \url{http://metodos.fam.cie.uva.es/~latex/apuntes/apuntes3.pdf}
-    
-    \item \textbf{Presentaciones de Diapositivas:}\\
-    \url{https://www.overleaf.com/learn/latex/beamer}
-    
-    \item \textbf{Gráficas generadas en \LaTeX}\\
-    \url{https://www.overleaf.com/gallery/tagged/charts}    
-\end{itemize}
 
 % Estilo de bibliografía APA
 % Si quiere usar el estilo IEEE comente esta línea
