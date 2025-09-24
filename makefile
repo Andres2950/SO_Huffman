@@ -16,7 +16,7 @@ RESET  := \033[0m
 
 all: build/huff build/dehuff
 
-build/huff: ./src/comprimir.c $(SRC_HEADERS)
+build/huff: ./src/compress.c $(SRC_HEADERS)
 	@echo -e "$(YELLOW) --- COMPILING --- $(RESET)"
 	@mkdir -p $(OUT_DIR)
 	@gcc $^ -o $@ $(CFLAGS) $(LIBS) \
@@ -24,7 +24,7 @@ build/huff: ./src/comprimir.c $(SRC_HEADERS)
 		&& echo -e "$(GREEN) $@ COMPILED SUCCESSFULLY$(RESET)" \
 		|| echo -e "$(GREEN) $@ HAD AN ERROR$(RESET)"
 
-build/dehuff: ./src/descomprimir.c $(SRC_HEADERS)
+build/dehuff: ./src/decompress.c $(SRC_HEADERS)
 	@echo -e "$(YELLOW) --- COMPILING --- $(RESET)"
 	@mkdir -p $(OUT_DIR)
 	@gcc $^ -o $@ $(CFLAGS) $(LIBS) \

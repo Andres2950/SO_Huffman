@@ -81,11 +81,18 @@ El matemático y científico en computación Donald Knuth diseñó TeX en 1978 c
 \subsection{Descripción del proyecto}
 El proyecto presentado trata sobre la implementación de un programa de compresión y descompresión de directos de archivos de texto plano. Está diseñado específicamente para la distribución de Debian, pero puede ser ejecutado en otras distribuciones de Linux que compartan las mismas características. La diferencia rige en el archivo de instalación de paquetes necesarios como gcc y make. Sin embargo, estos pueden ser instalados manualmente por el usuario que desee utilizar el programa.
 
-Para realizar las labores de compresión se realiza la utilización del algoritmo de Huffman, éste consiste en tomar las frecuencias de cada conjunto de caracteres presentados en el archivo y crear una lista que los ordene de manera ascendente. Posteriormente se crea el árbol de Huffman, para crearlo se basó en (cap) en donde se realiza la eliminación de los dos primeros nodos de la lista y se agregan a un nuevo nodo que contenga la suma de sus frecuencias. El nodo con menor frecuencia se coloca a la derecha (el primero) y el de mayor frecuencia a la izquierda (el segundo). Luego este nodo se inserta de nuevo a la lista siguiendo el ordenamiento por frecuencia, y así se realiza sucesivamente hasta tener un solo elemento que sería la raíz del árbol.
+La implementación de este algoritmo se hace en base a los presentado en el capítulo 16 del libro Algoritmos a fondo \cite{book_huffman}. Para realizar las labores de compresión se realiza la utilización del algoritmo de Huffman, éste consiste en tomar las frecuencias de cada conjunto de caracteres presentados en el archivo y crear una lista que los ordene de manera ascendente. Posteriormente se crea el árbol de Huffman. Para formar el árbol se realiza la eliminación de los dos primeros nodos de la lista y se agregan a un nuevo nodo que contenga la suma de sus frecuencias. El nodo con menor frecuencia se coloca a la derecha (el primero) y el de mayor frecuencia a la izquierda (el segundo). Luego este nodo se inserta de nuevo a la lista siguiendo el ordenamiento por frecuencia, y así se realiza sucesivamente hasta tener un solo elemento que sería la raíz del árbol.
 
 Una vez creado el árbol se visitan recursivamente los hijos de la raíz para formar el diccionario del código en binario para cada carácter leído de los archivos. Este diccionario se forma concatenando un 0 al código si es que está hacía la derecha del nodo actual o un 1 si está a la izquierda, esto se realiza hasta llegar a un nodo hoja que representaría el carácter buscado.
 
 Con el diccionario formado la compresión del archivo se reduce simplemente a ir reemplazando cada carácter por su equivalente en el archivo de salida objetivo. Para facilitar la descompresión se agrega al inicio del archivo el diccionario formado seguido por el nombre del primer archivo comprimido y la cantidad de bits que este representa. De esta manera, cuando se va a descomprimir se extrae primero el árbol, luego el nombre del archivo junto con su tamaño en bits y posteriormente se realiza la descompresión de dicho archivo, cuando la cantidad de bits reemplazados llegan al total que poseía dicho archivo se estaría cerrando y guardando para procesar el siguiente. Este proceso se realiza repetidamente hasta que no hayan archivos o bits por leer.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\linewidth]{figuras/estructura.png}
+    \caption{Ilustración de la estructura del programa}
+    \label{fig:estructura}
+\end{figure}
 
 \subsection{Instrucciones}
 \subsubsection{Cómo instalar el programa}
@@ -97,7 +104,7 @@ Con el diccionario formado la compresión del archivo se reduce simplemente a ir
     \texttt{wget \url{https://github.com/Andres2950/SO\_Huffman/archive/refs/heads/main.zip}}
     \end{itemize}
   \item Descomprima el archivo .zip descargado utilizando el comando \texttt{unzip}.
-\item Al extraer el archivo podrá observar la estructura de organización mencionada en la sección anterior.
+  \item Al extraer el archivo podrá observar la estructura de organización similar a la figura \ref{fig:estructura}.
 \item Ejecute el archivo \texttt{install.sh}, asegúrese de qué tenga permisos de ejecución, puede utilizar el comando \texttt{chmod +x install.sh} en caso de que no los posea y luego ejecute de la siguiente forma \texttt{./install.sh}. \\
   Este archivo se hará cargo de la instalación del compilador \textit{gcc} necesario para compilar el código fuente. Además hará la instalación del paquete \textit{make} para la ejecución de archivos makefile, dicho archivo posee las instrucciones de compilación de \textit{gcc} para resolver todas las dependencias que se encuentran en el directorio \textit{src/headers}.  
 \item Note que la instalación de dichos paquetes requiere permisos de usuarios root, al ejecutar el archivo \texttt{install.sh} este se volverá a ejecutar con dichos permisos, para esto solicitará la contraseña del usuario root para tener dichos permisos de ejecución (la contraseña es totalmente invisible para el programa) y así poder descargar los paquetes. Mostrará un mensaje como el de la figura N y esperará la entrada correcta.
@@ -108,9 +115,17 @@ Con el diccionario formado la compresión del archivo se reduce simplemente a ir
 
 \subsubsection{Cómo utilizar el programa}
 Una vez terminado el procedimiento de instalar el programa puede utilizar el comando huff para comprimir archivos. Dicho comando posee una serie de parámetros para sus distintos modos de ejecución. A continuación se detallan cada uno.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\linewidth]{figuras/huff_ayuda.png}
+    \caption{Ilustración del menú de ayuda del comando huff -h}
+    \label{fig:huffayuda}
+\end{figure}
+
 \begin{itemize}
   \item \textbf{huff -h}\\ \hspace{2cm}
-    Provee una guía de los parámetros requeridos por el programa y su orden de entrada. (Véase figura N)
+    Provee una guía de los parámetros requeridos por el programa y su orden de entrada (Véase figura \ref{fig:huffayuda}).
   \item \textbf{huff [Opción] src dst} o \textbf{dehuff [Opción] src dst}\\
 src es el directorio objetivo a ser comprimido/descomprimido\\
 dst es el archivo de destino
