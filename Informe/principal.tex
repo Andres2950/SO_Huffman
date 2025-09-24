@@ -255,8 +255,8 @@ Con el diccionario formado la compresión del archivo se reduce simplemente a ir
       \item Instalarlo directamente con el comando \\
     \texttt{wget \url{https://github.com/Andres2950/SO\_Huffman/archive/refs/heads/main.zip}}
     \end{itemize}
-  \item Descomprima el archivo .zip descargado utilizando el comando \texttt{unzip}.
-  \item Al extraer el archivo podrá observar la estructura de organización similar a la figura \ref{fig:estructura}.
+  \item Descomprima el archivo .zip descargado de la manera que prefiera, puede ser utilizando el comando \texttt{unzip main.zip}.
+  \item Al extraer el archivo verá la carpeta \texttt{SO\_Huffman-main}, muévase a ella utilizando el comando \texttt{cd SO\_Huffman-main}. Posteriormente podrá observar la estructura de organización similar a la figura \ref{fig:estructura}.
 \item Ejecute el archivo \texttt{install.sh}, asegúrese de qué tenga permisos de ejecución, puede utilizar el comando \texttt{chmod +x install.sh} en caso de que no los posea y luego ejecute de la siguiente forma \texttt{./install.sh}. \\
   Este archivo se hará cargo de la instalación del compilador \textit{gcc} necesario para compilar el código fuente. Además hará la instalación del paquete \textit{make} para la ejecución de archivos makefile, dicho archivo posee las instrucciones de compilación de \textit{gcc} para resolver todas las dependencias que se encuentran en el directorio \textit{src/headers}.  
 \item Note que la instalación de dichos paquetes requiere permisos de usuarios root, al ejecutar el archivo \texttt{install.sh} este se volverá a ejecutar con dichos permisos, para esto solicitará la contraseña del usuario root para tener dichos permisos de ejecución (la contraseña es totalmente invisible para el programa) y así poder descargar los paquetes. Mostrará un mensaje como el de la figura N y esperará la entrada correcta.
