@@ -146,19 +146,91 @@ La función \texttt{fork()} no toma ningún parámetro y devuelve un número ent
 Además, si el proceso padre se cierra inesperadamente, el proceso hijo también es matado.
 
 Una vez se crea el proceso hijo, es posible que se quiera que este solo corra una parte específica del código.
-Para manejar esto se utilizan las funciones \texttt{exit()} y \texttt{wait()}.
+Para manejar esto se utilizan las funciones \texttt{exit()} y \texttt{wait()} \cite{ref5}.
 La función \texttt{exit()} debe ser llamada desde un proceso hijo, una vez esto ocurre, el proceso hijo termina inmediatamente; además, esta función toma un número entero como parámetro, este se usa para revisar el estado de salida del hijo.
-La función \texttt{wait()} es usada en el proceso padre esta hace que el padre espera a que el hijo termine antes de seguir con su ejecución, esta función toma como parámetro una referencia a un entero, una vez el hijo termina, se agrega el estado de salida del hijo a esta referencia, si no se quiere recibir el estado de salida simplemente se puede usar \texttt{wait(NULL)}.
+La función \texttt{wait()} es usada en el proceso padre esta hace que el padre espera a que el hijo termine antes de seguir con su ejecución, esta función toma como parámetro una referencia a un entero, una vez el hijo termina, se agrega el estado de salida del hijo a esta referencia, si no se quiere recibir el estado de salida simplemente se puede usar \texttt{wait(NULL)}. Para utilizar estas funciones se debe importar \texttt{\#include <unistd.h>}.
 
 \subsection {Biblioteca pthread en C}
 
+La bilbioteca pthread consisten en más de 100 funciones usadas para manejo de hilos en C \cite{ref6}. 
+De esta bilbioteca, se usó una fracción de lo que esta ofrece para cumplir con los objetivos del proyecto.
+A continuación, se presentan algunas de las funciones principales de esta bilbioteca:
+\begin{itemize}
+    \item pthread\_create es una de las funciones más básicas, esta agrega un nuevo hilo al proceso acutal. Esta toma como parámetro una referencia a una variable de tipo pthread\_t, donde el sistema guarda el id del hilo; attr, un puntero a los atributtos que definen el hilo, se puede usar NULL para usar los atributos por defecto; routine, un puntero a la función que el hilo va a correr;arg, un putnero a los argumentos que toma la función.
+    \item pthread\_join es una funcion que permite que un hilo espere a que otro hilo termine. Esta toma como parámetro: thread, el ID del hilo a esperar y retval, un puntero a la variable en dónde se va a guardar el estado de salida del hilo.
+    \item pthread\_exit permite a un hilo terminar de froam explicitamente y toma como parámetro un puntero al valor que se quiere retornar en este hilo.
+    \item pthread\_mutex\_init es una funcion que inicializa un mutex, una estructura usada para evitar condiciones de carrera.
+    \item pthread\_mutex\_lock bloquea un mutex, si el mutex ya está bloqueado, el hilo que llama a la funcion se bloquea hasta que este pueda bloquear el mutex.
+    \item pthread\_mutex\_unlock desbloquea un mutex que estaba previamente bloquead, permitiendo que otro hilo pueda bloquearlo y por lo tanto leer o escribir datos globales.
+    \item pthread\_mutex\_destroy destruye uan estructura de mutex ya inicializada.
+\end{itemize}
+Para utilizar esta bilbioteca de debe usar \texttt{\#include <pthread.h>} y se debe compilar con el flag \texttt{-pthread} \cite{ref6}.
 
 \section {Estrategias para paralelizar los programas}
 
+\subsection {Compresor}
 
-\section{Desarrollo}
+Primero se identificó que este programa consiste de cuatro partes principales: la parte de lectura de archivos, la parte de creación del árbol, la parte de compresión y la parte de escritura del archivo comprimido.
+De estas se indentificó las partes las cuales tenían propiedades aptas para ser paralelizadas, es decir, que tenga subtareas independientes entre ellas.
+Las partes que se identificaron como paralelizables fueron: la lectura de archivos, ya que hay que leer muchos archivos, lo cual se podría hacer en paralelo; la parte de compresión, ya que hay que comrpimir los archivos y esto se puede hacer por separado; finalmente, la parte de escritura, la cuál se identificó que se podría paralelizar si se logra escribir en distintas partes de un archivo, esta idea de escribir en distintas partes del mismo archivo fue descartada durante el proceso del proyecto debido a su complejidad.
+Una vez identificadas las partes que podrían beneficiarse de estas herramientas, se crearon estrategias para ambos modo de ejecución.
 
-\subsection{Descripción del proyecto}
+\subsubsection {Compresor concurrente}
+
+Para el compresor concurrente se usaron dos estrategias de optimización, cada una siendo enlazada con una función en el código.
+\begin{itemize}
+    \item \texttt{read\_targetdir\_concurrent} es una función que obtiene todos los archivos del directorio dado, una vez se tienen estos archivos, sea abre un hilo para cada archivo, permitiendo que cada hilo lea de un archivo diferente. Luego por separado, cada hilo abre el archivo que le corresponde, y agrega en un puntero que se le pasa por parámetro el contenido del archivo. 
+    \item Una vez hecho esto, se crea el árbol de forma serial.
+    \item \texttt{targetdor\_compress\_concurrent} es  una función que crea un hilo por cada archivo a comprimir, a cada hilo se le pasa el contenido que debe comprimir, el árbol generado y un puntero en dónde va a agregar el contenido comprimido. Cada archivo utiliza el algoritmo de Huffman usand el árbol para comprimir el contenido que se le pasa.
+    \item Finalmente, de forma serial se escribe todo el contenido comprimido en un archivo en binaro.
+\end{itemize}
+
+
+\subsubsection {Compresor paralelo}
+
+La estrategia para el compresor paralelo es bastanre similar a la de el compresor concurrente, teniendo funciones análogas a lo dicho anterormente:
+\begin{itemize}
+    \item \texttt{read\_targetdir\_parallel} es el análogo a \texttt{read\_targetdir\_concurrent}, cada proceso creado, lee el archivo y devuelve sus contenidos.  
+    \item Una vez hecho esto, se crea el árbol de forma serial.
+    \item \texttt{targetdor\_compress\_parallel} es el análogo a \texttt{read\_targetdir\_concurrent}, cada proceso creado, comprime el contenido que se le da de usando el árbol y devuelve el contenido comprimido. 
+    \item Finalmente, de forma serial se escribe todo el contenido comprimido en un archivo en binaro.
+\end{itemize}
+
+
+\subsection {Decompresor}
+En el decompresor se hizo algo similar, se identificó las partes principales: lectura del diccionario, reconstrucción del árbol, lectura y decompresión del contenido y escritura de los archivos. 
+Se encontró que la parte de lectura y compresión y la parte de escritura se pueden hacer de forma paralela.
+Además se encontró que no había ningún paso intermedio serial entre leer y descomprimir un archivo y escribir el archivo, por lo que en las siguientes estrategias que se ven, se unifican estas partes en una sola función.
+
+\subsubsection {Decompresor concurrente}
+\begin {itemize}
+    \item Primero se lee el diccionario que indica cuál código pertenece a cuál letra, este se encuentra en la primera parte del archivo y se hace de forma serial.
+    \item Luego se reconstruye el árbol a partir del diccionario, también de forma serial.
+    \item Una vez hecho esto se entra en la funcion \texttt{concurrent\_handler} el cuál:
+        \begin{itemize}
+            \item Lee el nombre del archivo al que se contruirá y su tamaño, luego crea un nuevo hilo.
+            \item Luego cada hilo abre el archivo comprimido y abre otro archivo de destino.
+            \item Los hilos van leyendo byte por byte, lo descomprimen y lo escriben en el archivo de destino.
+            \item Cada vez que se crea un hilo, el hilo padre salta hasta el siguiente contenido, para seguir creando hilos.
+            \item Al final se espra a que todos los hilos terminen.
+        \end{itemize}
+\end {itemize}
+
+\subsubsection {Decompresor paralelo}
+En este se usa la misma estrategia que se explicó en el decompresor paralelo. 
+\begin {itemize}
+    \item Se lee el diccionario y se reconstruye el árbol de forma serial.
+    \item Una vez hecho esto se entra en la funcion \texttt{parallel\_handler} el cuál:
+        \begin{itemize}
+            \item Lee el nombre del archivo al que se contruirá y su tamaño, luego crea un nuevo proceso.
+            \item Cada proceso hijo abre el archivo comprimido y otro archivo de destino.
+            \item Los procesos leen byte por byte, lo descomprimen y lo escriben en el archivo de destino.
+            \item Cada vez que se crea un proceso hijo, el padre salta hasta el siguiente contenido, para seguir creando procesos.
+            \item Luego el padre espera a que todos los hijso teminen.
+        \end{itemize}
+\end {itemize}
+
+\section{Descripción del proyecto}
 El proyecto presentado trata sobre la implementación de un programa de compresión y descompresión de directos de archivos de texto plano. Está diseñado específicamente para la distribución de Debian, pero puede ser ejecutado en otras distribuciones de Linux que compartan las mismas características. La diferencia rige en el archivo de instalación de paquetes necesarios como gcc y make. Sin embargo, estos pueden ser instalados manualmente por el usuario que desee utilizar el programa.
 
 Para realizar las labores de compresión se realiza la utilización del algoritmo de Huffman, éste consiste en tomar las frecuencias de cada conjunto de caracteres presentados en el archivo y crear una lista que los ordene de manera ascendente. Posteriormente se crea el árbol de Huffman, para crearlo se basó en (cap) en donde se realiza la eliminación de los dos primeros nodos de la lista y se agregan a un nuevo nodo que contenga la suma de sus frecuencias. El nodo con menor frecuencia se coloca a la derecha (el primero) y el de mayor frecuencia a la izquierda (el segundo). Luego este nodo se inserta de nuevo a la lista siguiendo el ordenamiento por frecuencia, y así se realiza sucesivamente hasta tener un solo elemento que sería la raíz del árbol.
@@ -167,8 +239,8 @@ Una vez creado el árbol se visitan recursivamente los hijos de la raíz para fo
 
 Con el diccionario formado la compresión del archivo se reduce simplemente a ir reemplazando cada carácter por su equivalente en el archivo de salida objetivo. Para facilitar la descompresión se agrega al inicio del archivo el diccionario formado seguido por el nombre del primer archivo comprimido y la cantidad de bits que este representa. De esta manera, cuando se va a descomprimir se extrae primero el árbol, luego el nombre del archivo junto con su tamaño en bits y posteriormente se realiza la descompresión de dicho archivo, cuando la cantidad de bits reemplazados llegan al total que poseía dicho archivo se estaría cerrando y guardando para procesar el siguiente. Este proceso se realiza repetidamente hasta que no hayan archivos o bits por leer.
 
-\subsection{Instrucciones}
-\subsubsection{Cómo instalar el programa}
+\section{Instrucciones}
+\subsection{Cómo instalar el programa}
 \begin{enumerate}
   \item Descargue el código fuente del programa. Puede hacerlo de las dos siguientes formas:
     \begin{itemize}
@@ -186,7 +258,7 @@ Con el diccionario formado la compresión del archivo se reduce simplemente a ir
 
 \end{enumerate}
 
-\subsubsection{Cómo utilizar el programa}
+\subsection{Cómo utilizar el programa}
 Una vez terminado el procedimiento de instalar el programa puede utilizar el comando huff para comprimir archivos. Dicho comando posee una serie de parámetros para sus distintos modos de ejecución. A continuación se detallan cada uno.
 \begin{itemize}
   \item \textbf{huff -h}\\ \hspace{2cm}
